@@ -1,4 +1,4 @@
-#include "app.h"
+#include "game.h"
 #include <stdexcept>
 #ifndef NDEBUG
 #include <iostream>
@@ -27,8 +27,8 @@ int main(int argc, char** argv) {
 	      return 1;
 	  }
       }
-      App app(framework);
-      app.run();
+      Game game(framework);
+      game.run();
     }
   catch (const std::exception& e)
     {
