@@ -2,6 +2,7 @@
 
 #include <resource_loader/stb_image.h>
 #include <logger.h>
+#include <fstream>
 
 std::string getPaletteName(const char* file) {
     std::string palName = std::string(file);
@@ -17,6 +18,11 @@ std::string getPaletteName(const char* file) {
     return palName.substr(last_slash, last_point - last_slash);
 }
 
+void hexToColour(int hex, float fillCol[3]) {
+    for(int i = 0; i < 3; i++)
+	fillCol[i] = (float)((hex >> 8 * i) & 0xFF) / 255.0f;
+}
+
 Palette loadPalette(const char* file) {
     Palette pal {
 	getPaletteName(file),
@@ -30,11 +36,13 @@ Palette loadPalette(const char* file) {
     if(!im) {
 	LOG_ERROR("Failed to load palette image from file, "
 		  "returning blank palette!");
+	pal.name += " (failed to load)";
 	return pal;
     }
     if(w < 4 || h < 1 || nrCh < 3) {
 	LOG_ERROR("loaded palette had unsupported dimensions or channels,"
 		  " returning blank palette!");
+	pal.name += " (failed to load)";
 	return pal;
     }
     int step = w / 4;
@@ -56,22 +64,36 @@ Palette loadPalette(const char* file) {
 	    break;
 	default:
 	    LOG_ERROR("Palette step error, returning partial palette.");
+	    pal.name += " (failed to load)";
 	    return pal;
 	}
 	*p = 0;
 	for(int ch = 0; ch < 3; ch++)
 	    *p |= im[x*nrCh + ch] << 8 * (2 - ch);
-	printf("%d: %x, ", col, *p);
     }
     stbi_image_free(im);
-    LOG("\nloaded palette: " << file);
+    LOG("loaded palette: " << file);
     return pal;
 }
 
 std::vector<Palette> loadAllPalettes(const char* paletteListFile) {
     //get line count for preallocating vec
+    std::string path = paletteListFile;
+    int last_dash = 0;
+    for(int i = path.length() - 1; i >= 0 ; i--) {
+	if(path[i] == '/') {
+	    last_dash = i;
+	    break;
+	}
+    }
+    if(last_dash != 0)
+	path = path.substr(0, last_dash + 1);
+    else
+	path = "";
+    std::ifstream palList(paletteListFile);
+    std::string line;
     std::vector<Palette> palettes;
-
-    
+    while(std::getline(palList, line))
+	palettes.push_back(loadPalette((path + line).c_str()));
     return palettes;
 }
