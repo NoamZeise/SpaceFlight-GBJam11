@@ -1,0 +1,7 @@
+base.png
+coldfire.png
+cool.png
+coral.png
+crimson.png
+gold.png
+velvet.png

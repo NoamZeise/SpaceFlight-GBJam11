@@ -1,5 +1,5 @@
-add_executable(GBjam11 main.cpp game.cpp)
-target_link_libraries(GBjam11 GraphicsEnv)
+add_executable(GBjam11 main.cpp game.cpp palette.cpp)
+target_link_libraries(GBjam11 GraphicsEnv ResourceLoader)
 
 if(UNIX) # want linux binary to check current dir for libraries
   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

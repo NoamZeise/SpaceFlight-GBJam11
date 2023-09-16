@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 #include <manager.h>
 #include <GameHelper/camera.h>
+#include <vector>
 
 #define TIME_APP_DRAW_UPDATE
 //#define MULTI_UPDATE_ON_SLOW_DRAW
@@ -45,6 +46,7 @@ private:
     std::string  monitored_draw_stats = "";
 #endif
 
+    std::vector<int> palletes;
     Resource::Texture test;
 };
 

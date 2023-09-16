@@ -5,9 +5,27 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <graphics/glm_helper.h>
 #include <iostream>
+#include <resource_loader/stb_image.h>
+#include <logger.h>
+#include "palette.h"
+#include <stdio.h>
 
 Game::Game(RenderFramework defaultFramework) {
     ManagerState state;
+    state.conf.target_resolution[0] = GB_WIDTH;
+    state.conf.target_resolution[1] = GB_HEIGHT;
+    hexToColour(colour3, state.conf.clear_colour);
+    std::cout << "background colour: " << state.conf.clear_colour[0] << " " << state.conf.clear_colour[1] << " " << state.conf.clear_colour[2]
+	      << std::endl;
+
+    loadPalette("textures/palettes/base.png");
+    loadAllPalettes("textures/palettes/palettes.txt");
+    
+    state.conf.mip_mapping = false;
+    state.conf.multisampling = false;
+    state.conf.texture_filter_nearest = true;
+    state.cursor = cursorState::hidden;
+    state.fixedWindowRatio = false;
     manager = new Manager(defaultFramework, state);
 
     loadAssets();
@@ -85,7 +103,8 @@ void Game::draw() {
 
   manager->render->Begin2DDraw();
   
-  manager->render->DrawQuad(test, glmhelper::calcMatFromRect(glm::vec4(10, 10, 100, 100), 0.0f));
+  manager->render->DrawQuad(test, glmhelper::calcMatFromRect(glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT),
+							     0.0f));
 
   pFrameworkSwitch(manager->render,
 		   submitDraw = std::thread(
