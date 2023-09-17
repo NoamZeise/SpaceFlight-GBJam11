@@ -27,12 +27,10 @@ Game::Game(RenderFramework defaultFramework) {
     manager = new Manager(defaultFramework, state);
 
     loadAssets();
-
     fpcam = camera::FirstPerson(glm::vec3(3.0f, 0.0f, 2.0f));
     finishedDrawSubmit = true;
     manager->render->setLightDirection(lightDir);
     manager->render->setPalette(pea.toShaderPalette());
-    manager->audio.Play("audio/test.wav", false, 1.0f);
 }
 
 Game::~Game() {
