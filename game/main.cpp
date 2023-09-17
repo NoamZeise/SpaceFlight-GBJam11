@@ -11,6 +11,7 @@ bool frameworkArg(int argc, char** argv, int &i, RenderFramework *framework);
 
 
 int main(int argc, char** argv) {
+    std::cout << "Start" << std::endl;
   try
     {
 #ifndef NDEBUG
