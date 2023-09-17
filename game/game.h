@@ -1,20 +1,23 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <atomic>
-#include <thread>
-
 #define GLFW_INCLUDE_NONE
 #include <render.h>
-
 #include <GLFW/glfw3.h>
 #ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #endif
 #include <glm/glm.hpp>
+
 #include <manager.h>
 #include <GameHelper/camera.h>
+
 #include <vector>
+#include <atomic>
+#include <thread>
+
+#include "controls.h"
+#include "palette.h"
 
 #define TIME_APP_DRAW_UPDATE
 //#define MULTI_UPDATE_ON_SLOW_DRAW
@@ -46,8 +49,12 @@ private:
     std::string  monitored_draw_stats = "";
 #endif
 
-    std::vector<int> palletes;
+    std::vector<Palette> palettes;
+    GbInput input;
+
     Resource::Texture test;
+    glm::vec4 testRect = glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT);
+  
 };
 
 #endif

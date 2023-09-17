@@ -122,7 +122,7 @@ bool ControllerManager::connected(int controller) {
 
 bool ControllerManager::hold(int controller, int btn) {
     if(!connected(controller)) {
-	std::cerr << "no controller connected to that slot\n";
+	//	std::cerr << "no controller connected to that slot\n";
 	return false;
     }
     return controllers->c[controller].hold(btn);
@@ -130,7 +130,7 @@ bool ControllerManager::hold(int controller, int btn) {
 
 bool ControllerManager::press(int controller, int btn) {
     if(!connected(controller)) {
-	std::cerr << "no controller connected to that slot\n";
+	//	std::cerr << "no controller connected to that slot\n";
 	return false;
     }
     return controllers->c[controller].press(btn);
@@ -138,7 +138,7 @@ bool ControllerManager::press(int controller, int btn) {
 
 float ControllerManager::axis(int controller, int axis) {
     if(!connected(controller)) {
-	std::cerr << "no controller connected to that slot\n";
+	//	std::cerr << "no controller connected to that slot\n";
 	return false;
     }
     return controllers->c[controller].axis(axis);

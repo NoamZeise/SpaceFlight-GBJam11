@@ -7,7 +7,6 @@
 #include <iostream>
 #include <resource_loader/stb_image.h>
 #include <logger.h>
-#include "palette.h"
 #include <stdio.h>
 
 Game::Game(RenderFramework defaultFramework) {
@@ -17,7 +16,7 @@ Game::Game(RenderFramework defaultFramework) {
     hexToColour(colour0, state.conf.clear_colour);
     
     Palette pea = loadPalette("textures/palettes/pea.png");
-    loadAllPalettes("textures/palettes/palettes.txt");
+    palettes = loadAllPalettes("textures/palettes/palettes.txt");
     
     state.conf.mip_mapping = false;
     state.conf.multisampling = false;
@@ -58,6 +57,7 @@ void Game::update() {
   auto start = std::chrono::high_resolution_clock::now();
 #endif
   manager->update();
+  input.update(manager->input);
 
   controls();
   
@@ -72,12 +72,13 @@ void Game::update() {
 }
 
 void Game::controls() {
-    if (manager->input.kb.press(GLFW_KEY_F))
+    if (input.press(GB::Select))
 	manager->toggleFullscreen();
-    if (manager->input.kb.press(GLFW_KEY_ESCAPE)) {
+    if (input.press(GB::Start))
 	glfwSetWindowShouldClose(manager->window, GLFW_TRUE);
-    }
 
+    testRect.x += manager->timer.FrameElapsed() * input.hold(GB::Right);
+    testRect.x -= manager->timer.FrameElapsed() * input.hold(GB::Left);
 }
 
 void Game::postUpdate() {
@@ -100,8 +101,7 @@ void Game::draw() {
 
   manager->render->Begin2DDraw();
   
-  manager->render->DrawQuad(test, glmhelper::calcMatFromRect(glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT),
-							     0.0f));
+  manager->render->DrawQuad(test, glmhelper::calcMatFromRect(testRect, 0.0f));
 
   pFrameworkSwitch(manager->render,
 		   submitDraw = std::thread(
