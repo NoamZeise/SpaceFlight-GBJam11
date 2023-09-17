@@ -19,8 +19,30 @@ std::string getPaletteName(const char* file) {
 }
 
 void hexToColour(int hex, float fillCol[3]) {
-    for(int i = 0; i < 3; i++)
-	fillCol[i] = (float)((hex >> 8 * i) & 0xFF) / 255.0f;
+    for(int i = 0; i < 3; i++) {
+	printf("%x \n", hex);
+	printf("%x \n", hex >> 8);
+	printf("%x \n", (hex >> 8 * i) & 0xFF);
+	fillCol[i] = (float)((hex >> 8 * (2-i)) & 0xFF) / 255;
+    }
+}
+
+glm::vec4 hexToColour(int hex) {
+    float col[3];
+    hexToColour(hex, col);
+    LOG("col0: " << col[0]);
+    LOG("col1: " << col[1]);
+    LOG("col2: " << col[2]);
+    return glm::vec4(col[0], col[1], col[2], 1.0f);
+}
+
+ShaderPalette Palette::toShaderPalette() {
+    ShaderPalette pal;
+    pal.col0 = hexToColour(this->col0);
+    pal.col1 = hexToColour(this->col1);
+    pal.col2 = hexToColour(this->col2);
+    pal.col3 = hexToColour(this->col3);
+    return pal;
 }
 
 Palette loadPalette(const char* file) {
@@ -70,6 +92,7 @@ Palette loadPalette(const char* file) {
 	*p = 0;
 	for(int ch = 0; ch < 3; ch++)
 	    *p |= im[x*nrCh + ch] << 8 * (2 - ch);
+	printf("col: \%x \n", *p);
     }
     stbi_image_free(im);
     LOG("loaded palette: " << file);

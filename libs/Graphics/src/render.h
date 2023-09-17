@@ -9,6 +9,7 @@
 
 #include <graphics/resources.h>
 #include <graphics/render_config.h>
+#include <graphics/shader_structs.h>
 #include <glm/glm.hpp>
 
 namespace vkenv{
@@ -85,10 +86,11 @@ public:
     RenderConfig getRenderConf();
     void setTargetResolution(glm::vec2 resolution);
     glm::vec2 getTargetResolution();
+    void setPalette(ShaderPalette palette);
 
-  RenderFramework getRenderFramework() {
-    return renderer;
-  }
+    RenderFramework getRenderFramework() {
+	return renderer;
+    }
 
 private:
   RenderFramework renderer;

@@ -4,6 +4,14 @@
 #include "gb_consts.h"
 #include <vector>
 #include <string>
+#include <graphics/shader_structs.h>
+
+// given a colour in the format 0xRRGGBB,
+// fill a float array with the intensity of each R, G, B
+// value with a range from 0.0 - 1.0
+void hexToColour(int hex, float fillCol[3]);
+
+glm::vec4 hexToColour(int hex);
 
 // store a gameboy palette
 // where smaller numbers are
@@ -14,12 +22,9 @@ struct Palette {
     int col1;
     int col2;
     int col3;
+    
+    ShaderPalette toShaderPalette();
 };
-
-// given a colour in the format 0xRRGGBB,
-// fill a float array with the intensity of each R, G, B
-// value with a range from 0.0 - 1.0
-void hexToColour(int hex, float fillCol[3]);
 
 // given a path to an image file with 4 colours,
 // horizontally across the image with even spacing,

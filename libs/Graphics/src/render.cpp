@@ -154,9 +154,14 @@ void Render::set3DViewMatrixAndFov(glm::mat4 view, float fov, glm::vec4 camPos) 
     _RENDER_FN(set3DViewMatrixAndFov(view, fov, camPos))}
 void Render::set2DViewMatrixAndScale(glm::mat4 view, float scale) {_RENDER_FN(set2DViewMatrixAndScale(view, scale))}
 void Render::setLightDirection(glm::vec4 lightDir) {_RENDER_FN(setLightDirection(lightDir))}
-void Render::setTargetResolution(glm::vec2 resolution){_RENDER_FN(setTargetResolution(resolution))}
+void Render::setTargetResolution(glm::vec2 resolution){
+    _RENDER_FN(setTargetResolution(resolution))}
 
 glm::vec2 Render::getTargetResolution(){_RENDER_FN(getTargetResolution())}
+
+void Render::setPalette(ShaderPalette palette) {
+    _RENDER_FN(setPalette(palette));
+}
 
 void Render::setRenderConf(RenderConfig renderConf) {_RENDER_FN(setRenderConf(renderConf))}
 

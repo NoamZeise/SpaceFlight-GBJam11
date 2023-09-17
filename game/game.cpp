@@ -14,11 +14,9 @@ Game::Game(RenderFramework defaultFramework) {
     ManagerState state;
     state.conf.target_resolution[0] = GB_WIDTH;
     state.conf.target_resolution[1] = GB_HEIGHT;
-    hexToColour(colour3, state.conf.clear_colour);
-    std::cout << "background colour: " << state.conf.clear_colour[0] << " " << state.conf.clear_colour[1] << " " << state.conf.clear_colour[2]
-	      << std::endl;
-
-    loadPalette("textures/palettes/base.png");
+    hexToColour(colour0, state.conf.clear_colour);
+    
+    Palette pea = loadPalette("textures/palettes/pea.png");
     loadAllPalettes("textures/palettes/palettes.txt");
     
     state.conf.mip_mapping = false;
@@ -33,6 +31,7 @@ Game::Game(RenderFramework defaultFramework) {
     fpcam = camera::FirstPerson(glm::vec3(3.0f, 0.0f, 2.0f));
     finishedDrawSubmit = true;
     manager->render->setLightDirection(lightDir);
+    manager->render->setPalette(pea.toShaderPalette());
     manager->audio.Play("audio/test.wav", false, 1.0f);
 }
 
