@@ -16,8 +16,7 @@
 #include <atomic>
 #include <thread>
 
-#include "controls.h"
-#include "palette.h"
+#include "menu.h"
 
 #define TIME_APP_DRAW_UPDATE
 //#define MULTI_UPDATE_ON_SLOW_DRAW
@@ -51,9 +50,10 @@ private:
 
     std::vector<Palette> palettes;
     GbInput input;
+    MainMenu menu;
     Resource::Texture pixelCol0;
     glm::mat4 screenMat;
-    
+    Resource::Font gameFont;
     
     Resource::Texture test;
     glm::vec4 testRect = glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT);

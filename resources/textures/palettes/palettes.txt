@@ -4,4 +4,5 @@ cool.png
 coral.png
 crimson.png
 gold.png
+pea.png
 velvet.png

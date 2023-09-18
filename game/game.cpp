@@ -12,16 +12,12 @@
 Game::Game(RenderFramework defaultFramework) {
     ManagerState state;
     state.conf.target_resolution[0] = GB_WIDTH;
-    state.conf.target_resolution[1] = GB_HEIGHT;
-    
-    Palette pea = loadPalette("textures/palettes/pea.png");
-    palettes = loadAllPalettes("textures/palettes/palettes.txt");
-    
+    state.conf.target_resolution[1] = GB_HEIGHT;    
     state.conf.mip_mapping = false;
     state.conf.multisampling = false;
     state.conf.texture_filter_nearest = true;
     state.cursor = cursorState::hidden;
-    state.fixedWindowRatio = false;
+  
     manager = new Manager(defaultFramework, state);
 
     loadAssets();
@@ -31,7 +27,9 @@ Game::Game(RenderFramework defaultFramework) {
     fpcam = camera::FirstPerson(glm::vec3(3.0f, 0.0f, 2.0f));
     finishedDrawSubmit = true;
     manager->render->setLightDirection(lightDir);
-    manager->render->setPalette(pea.toShaderPalette());
+    palettes = loadAllPalettes("textures/palettes/palettes.txt");
+    menu = MainMenu(palettes, gameFont);
+    manager->render->setPalette(menu.getPalette().toShaderPalette());
 }
 
 Game::~Game() {
@@ -43,6 +41,7 @@ Game::~Game() {
 void Game::loadAssets() {
     test = manager->render->LoadTexture("textures/test.png");
     pixelCol0 = manager->render->LoadTexture("textures/pixel.png");
+    gameFont = manager->render->LoadFont("textures/dogicapixel.ttf");
     manager->render->LoadResourcesToGPU();
     manager->render->UseLoadedResources();
 }
@@ -105,6 +104,8 @@ void Game::draw() {
   manager->render->Begin2DDraw();
   
   manager->render->DrawQuad(test, glmhelper::calcMatFromRect(testRect, 0.0f));
+
+  manager->render->DrawString(gameFont, "SPACE THEME", glm::vec2(50, 60), 8, 1.0f, hexToColour(colour0));
 
   //clear background with col0
   manager->render->DrawQuad(pixelCol0, screenMat);

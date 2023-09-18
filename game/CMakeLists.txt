@@ -3,6 +3,7 @@ add_executable(GBjam11
   game.cpp
   palette.cpp
   controls.cpp
+  menu.cpp
 )
 target_link_libraries(GBjam11 GraphicsEnv ResourceLoader)
 
