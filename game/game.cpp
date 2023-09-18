@@ -13,7 +13,6 @@ Game::Game(RenderFramework defaultFramework) {
     ManagerState state;
     state.conf.target_resolution[0] = GB_WIDTH;
     state.conf.target_resolution[1] = GB_HEIGHT;
-    hexToColour(colour0, state.conf.clear_colour);
     
     Palette pea = loadPalette("textures/palettes/pea.png");
     palettes = loadAllPalettes("textures/palettes/palettes.txt");
@@ -26,6 +25,9 @@ Game::Game(RenderFramework defaultFramework) {
     manager = new Manager(defaultFramework, state);
 
     loadAssets();
+    screenMat = glmhelper::calcMatFromRect(glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT), 0,
+					   // should be most far away thing
+					   state.conf.depth_range_2D[0] + 0.01f);
     fpcam = camera::FirstPerson(glm::vec3(3.0f, 0.0f, 2.0f));
     finishedDrawSubmit = true;
     manager->render->setLightDirection(lightDir);
@@ -40,6 +42,7 @@ Game::~Game() {
 
 void Game::loadAssets() {
     test = manager->render->LoadTexture("textures/test.png");
+    pixelCol0 = manager->render->LoadTexture("textures/pixel.png");
     manager->render->LoadResourcesToGPU();
     manager->render->UseLoadedResources();
 }
@@ -103,6 +106,8 @@ void Game::draw() {
   
   manager->render->DrawQuad(test, glmhelper::calcMatFromRect(testRect, 0.0f));
 
+  //clear background with col0
+  manager->render->DrawQuad(pixelCol0, screenMat);
   pFrameworkSwitch(manager->render,
 		   submitDraw = std::thread(
 			   &Render::EndDraw, manager->render, std::ref(finishedDrawSubmit)),

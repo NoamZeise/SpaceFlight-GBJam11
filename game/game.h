@@ -51,7 +51,10 @@ private:
 
     std::vector<Palette> palettes;
     GbInput input;
-
+    Resource::Texture pixelCol0;
+    glm::mat4 screenMat;
+    
+    
     Resource::Texture test;
     glm::vec4 testRect = glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT);
   
