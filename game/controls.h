@@ -3,7 +3,7 @@
 
 #include <GameHelper/input.h>
 
-enum GB {
+enum class GB {
     A,
     B,
     Select,
@@ -21,8 +21,8 @@ class GbInput {
     bool hold(GB b);
     void update(gamehelper::Input &input);
  private:
-    bool current[GB::Right + 1];
-    bool prev[GB::Right + 1];
+    bool current[(int)GB::Right + 1];
+    bool prev[(int)GB::Right + 1];
 };
 
 #endif

@@ -4,10 +4,12 @@
 #define GB_WIDTH 160
 #define GB_HEIGHT 144
 
+#define GB_TEXT_SIZE 1.0f
+
 // matches flat.frag shader
-const int colour0 = 0x1c1c1c;
-const int colour1 = 0x525252;
-const int colour2 = 0xa3a3a3;
-const int colour3 = 0xe3e3e3;
+const int BASE_COLOUR0 = 0x1c1c1c;
+const int BASE_COLOUR1 = 0x525252;
+const int BASE_COLOUR2 = 0xa3a3a3;
+const int BASE_COLOUR3 = 0xe3e3e3;
 
 #endif

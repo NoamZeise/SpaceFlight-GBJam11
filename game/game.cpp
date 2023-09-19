@@ -27,8 +27,6 @@ Game::Game(RenderFramework defaultFramework) {
     fpcam = camera::FirstPerson(glm::vec3(3.0f, 0.0f, 2.0f));
     finishedDrawSubmit = true;
     manager->render->setLightDirection(lightDir);
-    palettes = loadAllPalettes("textures/palettes/palettes.txt");
-    menu = MainMenu(palettes, gameFont);
     manager->render->setPalette(menu.getPalette().toShaderPalette());
 }
 
@@ -39,9 +37,9 @@ Game::~Game() {
 }
 
 void Game::loadAssets() {
-    test = manager->render->LoadTexture("textures/test.png");
-    pixelCol0 = manager->render->LoadTexture("textures/pixel.png");
+    pixel = manager->render->LoadTexture("textures/pixel.png");
     gameFont = manager->render->LoadFont("textures/dogicapixel.ttf");
+    menu = MainMenu(manager->render);
     manager->render->LoadResourcesToGPU();
     manager->render->UseLoadedResources();
 }
@@ -60,8 +58,15 @@ void Game::update() {
 #endif
   manager->update();
   input.update(manager->input);
-
-  controls();
+  
+  switch(state) {
+  case GameState::Game:
+      gameUpdate();
+      break;
+  case GameState::Menu:
+      menuUpdate();
+      break;
+  }
   
   fpcam.update(manager->input, manager->timer);
 
@@ -73,14 +78,23 @@ void Game::update() {
 #endif
 }
 
-void Game::controls() {
-    if (input.press(GB::Select))
-	manager->toggleFullscreen();
+void Game::menuUpdate() {
     if (input.press(GB::Start))
+	state = GameState::Game;
+    MenuState state = menu.Update(input);
+    if(state.play)
+	this->state = GameState::Game;
+    if(state.fullscreen)
+	manager->toggleFullscreen();
+    if(state.quit)
 	glfwSetWindowShouldClose(manager->window, GLFW_TRUE);
+    if(state.paletteChanged)
+	manager->render->setPalette(menu.getPalette().toShaderPalette());
+}
 
-    testRect.x += manager->timer.FrameElapsed() * input.hold(GB::Right);
-    testRect.x -= manager->timer.FrameElapsed() * input.hold(GB::Left);
+void Game::gameUpdate() {
+    if (input.press(GB::Start))
+	state = GameState::Menu;
 }
 
 void Game::postUpdate() {
@@ -103,12 +117,19 @@ void Game::draw() {
 
   manager->render->Begin2DDraw();
   
-  manager->render->DrawQuad(test, glmhelper::calcMatFromRect(testRect, 0.0f));
+  switch(state) {
+  case GameState::Game:
+      manager->render->DrawString(gameFont, "GAMEPLAY!",
+				  glm::vec2(40.0f, 60.0f),
+				  GB_TEXT_SIZE, 0.0f, COL1);
+      break;
+  case GameState::Menu:
+      menu.Draw(manager->render);
+      break;
+  }
 
-  manager->render->DrawString(gameFont, "SPACE THEME", glm::vec2(50, 60), 8, 1.0f, hexToColour(colour0));
-
-  //clear background with col0
-  manager->render->DrawQuad(pixelCol0, screenMat);
+  //clear background
+  manager->render->DrawQuad(pixel, screenMat, COL3);
   pFrameworkSwitch(manager->render,
 		   submitDraw = std::thread(
 			   &Render::EndDraw, manager->render, std::ref(finishedDrawSubmit)),

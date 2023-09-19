@@ -13,6 +13,11 @@ void hexToColour(int hex, float fillCol[3]);
 
 glm::vec4 hexToColour(int hex);
 
+const glm::vec4 COL0 = hexToColour(BASE_COLOUR0);
+const glm::vec4 COL1 = hexToColour(BASE_COLOUR1);
+const glm::vec4 COL2 = hexToColour(BASE_COLOUR2);
+const glm::vec4 COL3 = hexToColour(BASE_COLOUR3);
+
 // store a gameboy palette
 // where smaller numbers are
 // usually darker.

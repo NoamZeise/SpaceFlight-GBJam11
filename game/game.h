@@ -21,6 +21,11 @@
 #define TIME_APP_DRAW_UPDATE
 //#define MULTI_UPDATE_ON_SLOW_DRAW
 
+enum class GameState {
+    Menu,
+    Game
+};
+
 class Game {
 public:
     Game(RenderFramework defaultFramework);
@@ -29,9 +34,11 @@ public:
 private:
     void loadAssets();
     void update();
-    void controls();
     void postUpdate();
     void draw();
+
+    void menuUpdate();
+    void gameUpdate();
 
     Manager* manager;
     camera::FirstPerson fpcam;
@@ -48,16 +55,15 @@ private:
     std::string  monitored_draw_stats = "";
 #endif
 
-    std::vector<Palette> palettes;
+    GameState state = GameState::Game;
+    
     GbInput input;
     MainMenu menu;
-    Resource::Texture pixelCol0;
+    Resource::Texture pixel;
     glm::mat4 screenMat;
+    
     Resource::Font gameFont;
     
-    Resource::Texture test;
-    glm::vec4 testRect = glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT);
-  
 };
 
 #endif
