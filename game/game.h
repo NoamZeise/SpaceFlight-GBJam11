@@ -64,9 +64,9 @@ private:
     
     Resource::Font gameFont;
 
-    Resource::Model testModel;
-    glm::mat4 testMat;
-    glm::mat4 testNorm;
+    Resource::Model planet;
+    glm::mat4 planetMat;
+    glm::mat4 planetNorm;
 };
 
 #endif

@@ -9,6 +9,9 @@
 #include <logger.h>
 #include <stdio.h>
 
+const float SPECULAR_INTENSITY = 1.0f;
+const float FAR_CLIP_3D = 100000000000000.0f;
+
 Game::Game(RenderFramework defaultFramework) {
     ManagerState state;
     state.conf.target_resolution[0] = GB_WIDTH;
@@ -16,20 +19,23 @@ Game::Game(RenderFramework defaultFramework) {
     state.conf.mip_mapping = false;
     state.conf.multisampling = false;
     state.conf.texture_filter_nearest = true;
+    state.conf.depth_range_3D[0] = 0.5f;
+    state.conf.depth_range_3D[1] = FAR_CLIP_3D;
     state.cursor = cursorState::disabled;
-  
+    
     manager = new Manager(defaultFramework, state);
-
+    
     loadAssets();
     screenMat = glmhelper::calcMatFromRect(glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT), 0,
 					   // should be most far away thing
 					   state.conf.depth_range_2D[0] + 0.01f);
     fpcam = camera::FirstPerson(glm::vec3(3.0f, 0.0f, 2.0f));
+    fpcam.setSpeed(0.001f);
     finishedDrawSubmit = true;
     manager->render->setLightDirection(lightDir);
     manager->render->setPalette(menu.getPalette().toShaderPalette());
     Lighting3D light;
-    light.specular.w = 1.0f;
+    light.specular.w = SPECULAR_INTENSITY;
     manager->render->setLighting3D(light);
 }
 
@@ -42,12 +48,13 @@ Game::~Game() {
 void Game::loadAssets() {
     pixel = manager->render->LoadTexture("textures/pixel.png");
     gameFont = manager->render->LoadFont("textures/dogicapixel.ttf");
-    testModel = manager->render->Load3DModel("models/ROOM.fbx");
-    testMat = glm::translate(
-	    glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
-			glm::vec3(1, 0, 0)),
-	    glm::vec3(4, 0, 0));
-    testNorm = glm::inverseTranspose(testMat);
+
+    planet = manager->render->Load3DModel("models/planet.obj");
+    planetMat = glm::translate(glm::scale(glm::mat4(1.0f),
+					  glm::vec3(3)),
+			       glm::vec3(5, 0, 0));
+    planetNorm = glm::inverseTranspose(planetMat);
+    
     menu = MainMenu(manager->render);
     manager->render->LoadResourcesToGPU();
     manager->render->UseLoadedResources();
@@ -76,6 +83,13 @@ void Game::update() {
       menuUpdate();
       break;
   }
+
+  //debug controls
+
+  if(manager->input.kb.press(GLFW_KEY_F1))
+      fpcam.toggleFasterCam();
+  if(manager->input.kb.press(GLFW_KEY_F2))
+      glfwSetWindowShouldClose(manager->window, GLFW_TRUE);
   
   fpcam.update(manager->input, manager->timer);
 
@@ -104,6 +118,7 @@ void Game::menuUpdate() {
 void Game::gameUpdate() {
     if (input.press(GB::Start))
 	state = GameState::Menu;
+
 }
 
 void Game::postUpdate() {
@@ -133,7 +148,7 @@ void Game::draw() {
   if(state == GameState::Game) {
       manager->render->Begin3DDraw();
 
-      manager->render->DrawModel(testModel, testMat, testNorm);
+      manager->render->DrawModel(planet, planetMat, planetNorm);
   
       manager->render->Begin2DDraw();
   }

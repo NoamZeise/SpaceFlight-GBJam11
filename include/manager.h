@@ -36,6 +36,7 @@ struct Manager {
     void update();
     void setFullscreen(bool fullscreen);
     void toggleFullscreen();
+    void setWindowSize(int width, int height);
     
     GLFWwindow *window;
     Render* render;

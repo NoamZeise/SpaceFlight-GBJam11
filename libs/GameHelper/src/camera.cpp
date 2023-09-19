@@ -21,7 +21,15 @@ namespace camera {
       return _zoom;
   }
 
-
+  void FirstPerson::toggleFasterCam() {
+      useFaster = !useFaster;
+      if(useFaster)
+	  _speed = _fasterSpeed;
+      else
+	  _speed = _slowerSpeed;
+	  
+  }
+  
   void FirstPerson::update(gamehelper::Input &input, gamehelper::Timer &timer) {
       viewUpdated = true;
       //keyboard
@@ -41,8 +49,8 @@ namespace camera {
 	  _position -= _worldUp * velocity;
 
       //mouse
-      _pitch   -= (float)input.m.dy() * _sensitivity;
-      _yaw 	 -= (float)input.m.dx() * _sensitivity;
+      _pitch   -= input.m.dy() * _sensitivity;
+      _yaw 	 -= input.m.dx() * _sensitivity;
 
       if(input.c.connected(0)) {
 	  glm::vec2 controller(input.c.axis(0, GLFW_GAMEPAD_AXIS_LEFT_X),
@@ -69,17 +77,17 @@ namespace camera {
 
       }
 
-      if(_pitch > 89.0f)
-	  _pitch = 89.0f;
-      if(_pitch < -89.0f)
-	  _pitch = -89.0f;
+      if(_pitch > 89.0)
+	  _pitch = 89.0;
+      if(_pitch < -89.0)
+	  _pitch = -89.0;
 
       //scroll
-      _zoom -= (float)input.m.scroll() * timer.FrameElapsed();
-      if(_zoom < 1.0f)
-	  _zoom = 1.0f;
-      if(_zoom > 100.0f)
-	  _zoom = 100.0f;
+      _zoom -= input.m.scroll() * timer.FrameElapsed();
+      if(_zoom < 1.0)
+	  _zoom = 1.0;
+      if(_zoom > 100.0)
+	  _zoom = 100.0;
 
       calculateVectors();
       //std::cout << "X:" << _position.x << " Y:" << _position.y << " Z:" << _position.z << std::endl;

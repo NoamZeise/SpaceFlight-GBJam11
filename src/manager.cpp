@@ -20,12 +20,23 @@ Manager::Manager(RenderFramework renderer,
     render = new Render(renderer);
     if(render->NoApiLoaded())
 	throw std::runtime_error("Failed to load any graphics apis!");
-
+    
+    auto monitor = glfwGetPrimaryMonitor();
+    int monWidth, monHeight;
+    glfwGetMonitorWorkarea(monitor, nullptr, nullptr, &monWidth, &monHeight);
+    winWidth = monHeight / 2;
+    winHeight = winWidth * 0.9;
+    
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    
     window = glfwCreateWindow(winWidth, winHeight, "App",
 			      state.startFullscreen ? glfwGetPrimaryMonitor() : NULL,
 			      nullptr);
     if(!window)
 	throw std::runtime_error("glfw failed to create window!");
+
+    glfwSetWindowPos(window, monWidth / 3, monHeight / 3);
+    glfwShowWindow(window);
 
     //set glfw callbacks
     glfwSetWindowUserPointer(window, this);
@@ -75,6 +86,14 @@ void Manager::setFullscreen(bool fullscreen) {
     } else {
 	glfwSetWindowMonitor(window, NULL, 0, 0, winWidth,
 			     winHeight, mode->refreshRate);
+    }
+}
+
+void Manager::setWindowSize(int width, int height) {
+    if(glfwGetWindowMonitor(window) == NULL) {
+	winWidth = width;
+	winHeight = height;
+	glfwSetWindowSize(window, width, height);
     }
 }
 
