@@ -16,7 +16,7 @@ Game::Game(RenderFramework defaultFramework) {
     state.conf.mip_mapping = false;
     state.conf.multisampling = false;
     state.conf.texture_filter_nearest = true;
-    state.cursor = cursorState::hidden;
+    state.cursor = cursorState::disabled;
   
     manager = new Manager(defaultFramework, state);
 
@@ -28,6 +28,9 @@ Game::Game(RenderFramework defaultFramework) {
     finishedDrawSubmit = true;
     manager->render->setLightDirection(lightDir);
     manager->render->setPalette(menu.getPalette().toShaderPalette());
+    Lighting3D light;
+    light.specular.w = 1.0f;
+    manager->render->setLighting3D(light);
 }
 
 Game::~Game() {
@@ -39,6 +42,12 @@ Game::~Game() {
 void Game::loadAssets() {
     pixel = manager->render->LoadTexture("textures/pixel.png");
     gameFont = manager->render->LoadFont("textures/dogicapixel.ttf");
+    testModel = manager->render->Load3DModel("models/ROOM.fbx");
+    testMat = glm::translate(
+	    glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
+			glm::vec3(1, 0, 0)),
+	    glm::vec3(4, 0, 0));
+    testNorm = glm::inverseTranspose(testMat);
     menu = MainMenu(manager->render);
     manager->render->LoadResourcesToGPU();
     manager->render->UseLoadedResources();
@@ -116,20 +125,32 @@ void Game::draw() {
     submitDraw.join();
 
   manager->render->Begin2DDraw();
+
+  //clear background
+  manager->render->DrawQuad(pixel, screenMat, COL3);
+
+  
+  if(state == GameState::Game) {
+      manager->render->Begin3DDraw();
+
+      manager->render->DrawModel(testModel, testMat, testNorm);
+  
+      manager->render->Begin2DDraw();
+  }
   
   switch(state) {
   case GameState::Game:
-      manager->render->DrawString(gameFont, "GAMEPLAY!",
-				  glm::vec2(40.0f, 60.0f),
-				  GB_TEXT_SIZE, 0.0f, COL1);
+      
       break;
   case GameState::Menu:
       menu.Draw(manager->render);
       break;
   }
 
-  //clear background
-  manager->render->DrawQuad(pixel, screenMat, COL3);
+
+
+
+  
   pFrameworkSwitch(manager->render,
 		   submitDraw = std::thread(
 			   &Render::EndDraw, manager->render, std::ref(finishedDrawSubmit)),

@@ -18,11 +18,23 @@ layout(set = 4, binding = 0) uniform LightingUBO
     vec4 camPos;
 } lighting;
 
+layout(set = 5, binding = 0) uniform UBO {
+  vec4 col0;
+  vec4 col1;
+  vec4 col2;
+  vec4 col3;
+} palette;
+
 layout(location = 0) in vec2 inTexCoord;
 layout(location = 1) in vec3 inFragPos;
 layout(location = 2) in vec3 inNormal;
 
 layout(location = 0) out vec4 outColour;
+
+const int COLOUR0 = int((0x1c / 255.0f) * 100);
+const int COLOUR1 = int((0x52 / 255.0f) * 100);
+const int COLOUR2 = int((0xa3 / 255.0f) * 100);
+const int COLOUR3 = int((0xe3 / 255.0f) * 100);
 
 
 void main()
@@ -64,4 +76,16 @@ void main()
     vec3 specular = lighting.specular.xyz * specularIntensity;
 
     outColour = vec4(ambient + diffuse + specular, 1.0) * objectColour;
+
+    float intensity = (outColour.x + outColour.y + outColour.z) * 33;
+    float alpha = outColour.w;
+    if(intensity < COLOUR0)
+      outColour = palette.col0;
+    else if(intensity < COLOUR1)
+      outColour = palette.col1;
+    else if(intensity < COLOUR2)
+      outColour = palette.col2;
+    else
+      outColour = palette.col3;
+    outColour.w = alpha;
 }

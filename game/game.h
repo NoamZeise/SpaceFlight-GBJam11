@@ -63,7 +63,10 @@ private:
     glm::mat4 screenMat;
     
     Resource::Font gameFont;
-    
+
+    Resource::Model testModel;
+    glm::mat4 testMat;
+    glm::mat4 testNorm;
 };
 
 #endif

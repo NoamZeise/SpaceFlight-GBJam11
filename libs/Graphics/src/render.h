@@ -87,6 +87,7 @@ public:
     void setTargetResolution(glm::vec2 resolution);
     glm::vec2 getTargetResolution();
     void setPalette(ShaderPalette palette);
+    void setLighting3D(Lighting3D lighting);
 
     RenderFramework getRenderFramework() {
 	return renderer;

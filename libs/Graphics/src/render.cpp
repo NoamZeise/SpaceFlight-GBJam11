@@ -163,6 +163,10 @@ void Render::setPalette(ShaderPalette palette) {
     _RENDER_FN(setPalette(palette));
 }
 
+void Render::setLighting3D(Lighting3D lighting) {
+    _RENDER_FN(setLighting3D(lighting));
+}
+
 void Render::setRenderConf(RenderConfig renderConf) {_RENDER_FN(setRenderConf(renderConf))}
 
 RenderConfig Render::getRenderConf() {_RENDER_FN(getRenderConf())}

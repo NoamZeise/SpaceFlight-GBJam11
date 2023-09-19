@@ -10,6 +10,16 @@ uniform sampler2D image;
 uniform vec4 spriteColour;
 uniform bool enableTex;
 
+const int COLOUR0 = int((0x1c / 255.0f) * 100);
+const int COLOUR1 = int((0x52 / 255.0f) * 100);
+const int COLOUR2 = int((0xa3 / 255.0f) * 100);
+const int COLOUR3 = int((0xe3 / 255.0f) * 100);
+
+uniform vec4 col0;
+uniform vec4 col1;
+uniform vec4 col2;
+uniform vec4 col3;
+
 struct LightingParams
 {
   vec4 ambient;
@@ -51,4 +61,16 @@ void main()
   vec3 specular = lighting.specular.xyz * specularIntensity;
 
   outColour = vec4(ambient + diffuse + specular, 1.0) * objectColour;
+
+      float intensity = (outColour.x + outColour.y + outColour.z) * 33;
+    float alpha = outColour.w;
+    if(intensity < COLOUR0)
+      outColour = col0;
+    else if(intensity < COLOUR1)
+      outColour = col1;
+    else if(intensity < COLOUR2)
+      outColour = col2;
+    else
+      outColour = col3;
+    outColour.w = alpha;
 }
