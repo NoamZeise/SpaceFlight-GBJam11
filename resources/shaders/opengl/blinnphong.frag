@@ -34,13 +34,8 @@ uniform LightingParams lighting;
 void main()
 {
   vec4 objectColour;
-  if(enableTex)
-    objectColour = texture(image, inTexCoords) * spriteColour;
-  else
-    objectColour = spriteColour;
-
-  if(objectColour.w == 0)
-    discard;
+  objectColour = texture(image, inTexCoords) * spriteColour * int(enableTex) +
+    int(!enableTex) * spriteColour;
 
   vec3 ambient = lighting.ambient.xyz * lighting.ambient.w;
 

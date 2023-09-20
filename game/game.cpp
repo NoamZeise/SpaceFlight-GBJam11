@@ -9,7 +9,7 @@
 #include <logger.h>
 #include <stdio.h>
 
-const float SPECULAR_INTENSITY = 1.0f;
+const float SPECULAR_INTENSITY = 10.0f;
 const float FAR_CLIP_3D = 100000000000000.0f;
 
 Game::Game(RenderFramework defaultFramework) {
@@ -27,12 +27,11 @@ Game::Game(RenderFramework defaultFramework) {
     
     loadAssets();
     screenMat = glmhelper::calcMatFromRect(glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT), 0,
-					   // should be most far away thing
+					   // should be furthest in the background
 					   state.conf.depth_range_2D[0] + 0.01f);
     fpcam = camera::FirstPerson(glm::vec3(70.0f, 0.0f, 0.0f));
     fpcam.setSpeed(0.001f);
     finishedDrawSubmit = true;
-    manager->render->setLightDirection(lightDir);
     manager->render->setPalette(menu.getPalette().toShaderPalette());
     Lighting3D light;
     light.specular.w = SPECULAR_INTENSITY;
@@ -136,7 +135,7 @@ void Game::draw() {
     manager->render->Begin2DDraw();
 
     //clear background
-    manager->render->DrawQuad(pixel, screenMat, COL3);
+    manager->render->DrawQuad(pixel, screenMat, COL0);
   
     switch(state) {
     case GameState::Game:
