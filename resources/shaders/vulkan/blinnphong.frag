@@ -58,8 +58,9 @@ void main()
     vec3 ambient = lighting.ambient.xyz * lighting.ambient.w;
 
     vec3 normal = normalize(inNormal);
-    
-    vec3 lightDir = normalize(-lighting.direction.xyz);
+
+    //-inFragPos;
+    vec3 lightDir = normalize(-inFragPos);//normalize(-lighting.direction.xyz);
 
     float lambertian = max(dot(lightDir, normal), 0.0);
     

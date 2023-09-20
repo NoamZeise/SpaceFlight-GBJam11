@@ -17,6 +17,7 @@
 #include <thread>
 
 #include "menu.h"
+#include "system.h"
 
 #define TIME_APP_DRAW_UPDATE
 //#define MULTI_UPDATE_ON_SLOW_DRAW
@@ -63,10 +64,8 @@ private:
     glm::mat4 screenMat;
     
     Resource::Font gameFont;
-
-    Resource::Model planet;
-    glm::mat4 planetMat;
-    glm::mat4 planetNorm;
+    
+    System system;
 };
 
 #endif

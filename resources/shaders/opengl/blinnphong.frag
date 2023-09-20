@@ -45,7 +45,7 @@ void main()
   vec3 ambient = lighting.ambient.xyz * lighting.ambient.w;
 
   vec3 normal = normalize(inNormal);
-  vec3 lightDir = normalize(-lighting.direction.xyz);
+  vec3 lightDir = normalize(-inFragPos);
 
   float lambertian = max(dot(normal, lightDir), 0.0);
   vec3 diffuse = lighting.diffuse.xyz * lighting.diffuse.w * lambertian;
@@ -62,15 +62,15 @@ void main()
 
   outColour = vec4(ambient + diffuse + specular, 1.0) * objectColour;
 
-      float intensity = (outColour.x + outColour.y + outColour.z) * 33;
-    float alpha = outColour.w;
-    if(intensity < COLOUR0)
-      outColour = col0;
-    else if(intensity < COLOUR1)
-      outColour = col1;
-    else if(intensity < COLOUR2)
-      outColour = col2;
-    else
-      outColour = col3;
-    outColour.w = alpha;
+  float intensity = (outColour.x + outColour.y + outColour.z) * 33;
+  float alpha = outColour.w;
+  if(intensity < COLOUR0)
+    outColour = col0;
+  else if(intensity < COLOUR1)
+    outColour = col1;
+  else if(intensity < COLOUR2)
+    outColour = col2;
+  else
+    outColour = col3;
+  outColour.w = alpha;
 }

@@ -29,7 +29,7 @@ Game::Game(RenderFramework defaultFramework) {
     screenMat = glmhelper::calcMatFromRect(glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT), 0,
 					   // should be most far away thing
 					   state.conf.depth_range_2D[0] + 0.01f);
-    fpcam = camera::FirstPerson(glm::vec3(3.0f, 0.0f, 2.0f));
+    fpcam = camera::FirstPerson(glm::vec3(70.0f, 0.0f, 0.0f));
     fpcam.setSpeed(0.001f);
     finishedDrawSubmit = true;
     manager->render->setLightDirection(lightDir);
@@ -47,15 +47,9 @@ Game::~Game() {
 
 void Game::loadAssets() {
     pixel = manager->render->LoadTexture("textures/pixel.png");
-    gameFont = manager->render->LoadFont("textures/dogicapixel.ttf");
-
-    planet = manager->render->Load3DModel("models/planet.obj");
-    planetMat = glm::translate(glm::scale(glm::mat4(1.0f),
-					  glm::vec3(3)),
-			       glm::vec3(5, 0, 0));
-    planetNorm = glm::inverseTranspose(planetMat);
-    
     menu = MainMenu(manager->render);
+    system = System(manager->render);
+	
     manager->render->LoadResourcesToGPU();
     manager->render->UseLoadedResources();
 }
@@ -128,50 +122,38 @@ void Game::postUpdate() {
 
 void Game::draw() {
 #ifdef TIME_APP_DRAW_UPDATE
-  auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 #endif
 
 #ifdef MULTI_UPDATE_ON_SLOW_DRAW
-  if (!finishedDrawSubmit)
-    return;
-  finishedDrawSubmit = false;
+    if (!finishedDrawSubmit)
+	return;
+    finishedDrawSubmit = false;
 #endif
-  if (submitDraw.joinable())
-    submitDraw.join();
+    if (submitDraw.joinable())
+	submitDraw.join();
 
-  manager->render->Begin2DDraw();
+    manager->render->Begin2DDraw();
 
-  //clear background
-  manager->render->DrawQuad(pixel, screenMat, COL3);
-
+    //clear background
+    manager->render->DrawQuad(pixel, screenMat, COL3);
   
-  if(state == GameState::Game) {
-      manager->render->Begin3DDraw();
-
-      manager->render->DrawModel(planet, planetMat, planetNorm);
+    switch(state) {
+    case GameState::Game:
+	manager->render->Begin3DDraw();
+	system.Draw(manager->render);
+	manager->render->Begin2DDraw();
+	break;
+    case GameState::Menu:
+	menu.Draw(manager->render);
+	break;
+    }
   
-      manager->render->Begin2DDraw();
-  }
-  
-  switch(state) {
-  case GameState::Game:
-      
-      break;
-  case GameState::Menu:
-      menu.Draw(manager->render);
-      break;
-  }
-
-
-
-
-  
-  pFrameworkSwitch(manager->render,
-		   submitDraw = std::thread(
-			   &Render::EndDraw, manager->render, std::ref(finishedDrawSubmit)),
-		   {
-		       manager->render->EndDraw(finishedDrawSubmit);
-		       finishedDrawSubmit = true;
-		   }
-  );
+    pFrameworkSwitch(
+	    manager->render,
+	    submitDraw = std::thread(
+		    &Render::EndDraw, manager->render, std::ref(finishedDrawSubmit)),{
+		manager->render->EndDraw(finishedDrawSubmit);
+		finishedDrawSubmit = true;
+	    });
 }

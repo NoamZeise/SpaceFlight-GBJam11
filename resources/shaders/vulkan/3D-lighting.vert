@@ -26,8 +26,6 @@ layout(location = 0) out vec2 outTexCoord;
 layout(location = 1) out vec3 outFragPos_world;
 layout(location = 2) out vec3 outNormal_world;
 
-
-
 void main()
 {
     outTexCoord = inTexCoord;
