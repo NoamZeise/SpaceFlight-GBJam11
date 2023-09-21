@@ -4,7 +4,6 @@ layout(push_constant) uniform fragconstants
 {
     vec4 colour;
     vec4 texOffset;
-
     ivec4 props;
     // [0] - int - texID
     //[1] - bool - no shading
@@ -48,10 +47,10 @@ void main()
     coord.x += pc.texOffset.x;
     coord.y += pc.texOffset.y;
     
-    bool useTex = bool(pc.texID); //ID zero == no tex
+    bool useTex = bool(pc.props[0]); //ID zero == no tex
     vec4 objectColour =
       int(useTex) *
-      texture(sampler2D(textures[pc.texID], texSamp), coord) *
+      texture(sampler2D(textures[pc.props[0]], texSamp), coord) *
       pc.colour
       + int(!useTex) * pc.colour;
 
@@ -61,8 +60,8 @@ void main()
 
     //-inFragPos;
     vec3 lightDir = normalize(-inFragPos);//normalize(-lighting.direction.xyz);
-
-    float lambertian = max(dot(lightDir, normal), 0.0);
+    float lambertian = max(dot(lightDir, normal), 0.0) * pc.props[1]
+      + 1000 * int(!bool(pc.props[1]));
     vec3 diffuse = lighting.diffuse.xyz * lighting.diffuse.w * lambertian;
     
     vec3 viewDir = normalize(lighting.camPos.xyz - inFragPos);

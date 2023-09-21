@@ -9,6 +9,7 @@ out vec4 outColour;
 uniform sampler2D image;
 uniform vec4 spriteColour;
 uniform bool enableTex;
+uniform bool useShading;
 
 const int COLOUR0 = int((0x1c / 255.0f) * 100);
 const int COLOUR1 = int((0x52 / 255.0f) * 100);
@@ -42,7 +43,8 @@ void main()
   vec3 normal = normalize(inNormal);
   vec3 lightDir = normalize(-inFragPos);
 
-  float lambertian = max(dot(normal, lightDir), 0.0);
+  float lambertian = max(dot(normal, lightDir), 0.0) * int(useShading)
+    + int(!useShading) * 1000;
   vec3 diffuse = lighting.diffuse.xyz * lighting.diffuse.w * lambertian;
 
   float specularIntensity = 0.0;

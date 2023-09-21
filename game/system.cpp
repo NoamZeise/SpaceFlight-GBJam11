@@ -15,7 +15,9 @@ System::System(Render *render) {
     glm::mat4 middle = glm::scale(
 	    glm::mat4(1.0f),
 	    glm::vec3(10));
+    planet.useShading = false;
     sun = Planet(planet, middle);
+    planet.useShading = true;
     middle = glm::scale(glm::mat4(1.0f),
 			glm::vec3(5.0f));
     planets.push_back(
