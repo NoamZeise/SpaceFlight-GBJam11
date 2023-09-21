@@ -9,7 +9,7 @@ const int EXIT_INDEX = 3;
 const float MENU_X = 15.0f;
 const float MENU_Y = 80.0f;
 const float MENU_SPACING = 18.0f;
-const float MENU_DEPTH = 9.0f;
+const float MENU_DEPTH = 0.9f;
 
 MainMenu::MainMenu(Render *render) {
     this->palettes = loadAllPalettes("textures/palettes/palettes.txt");

@@ -29,6 +29,10 @@ namespace camera {
 	  _speed = _slowerSpeed;
 	  
   }
+
+  void FirstPerson::setPos(glm::vec3 pos) {
+      _position = pos;
+  }
   
   void FirstPerson::update(gamehelper::Input &input, gamehelper::Timer &timer) {
       viewUpdated = true;
@@ -37,11 +41,11 @@ namespace camera {
       if(input.kb.hold(GLFW_KEY_W))
 	  _position += _front * velocity;
       if(input.kb.hold(GLFW_KEY_A))
-	  _position -= _right * velocity;
+	  _position -= _left * velocity;
       if(input.kb.hold(GLFW_KEY_S))
 	  _position -= _front * velocity;
       if(input.kb.hold(GLFW_KEY_D))
-	  _position += _right * velocity;
+	  _position += _left * velocity;
       
       if(input.kb.hold(GLFW_KEY_SPACE))
 	  _position += _worldUp * velocity;
@@ -59,7 +63,7 @@ namespace camera {
 	  controller.x = abs(controller.x) > 0.15 ? controller.x : 0;
 	  controller.y = abs(controller.y) > 0.15 ? controller.y : 0;
 	  _position += _front * velocity * -controller.y;
-	  _position += _right * velocity * controller.x;
+	  _position += _left * velocity * controller.x;
 	  
 	  controller = glm::vec2(input.c.axis(0, GLFW_GAMEPAD_AXIS_RIGHT_X),
 				 input.c.axis(0, GLFW_GAMEPAD_AXIS_RIGHT_Y));
@@ -99,8 +103,8 @@ namespace camera {
       _front.z = sin(glm::radians(_pitch));
       _front = glm::normalize(_front);
 
-      _right = glm::normalize(glm::cross(_front, _worldUp));
-      _up = glm::normalize(glm::cross(_right, _front));
+      _left = glm::normalize(glm::cross(_front, _worldUp));
+      _up = glm::normalize(glm::cross(_left, _front));
   }
 
 } //namespace end

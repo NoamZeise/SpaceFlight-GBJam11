@@ -5,6 +5,7 @@ add_executable(GBjam11
   controls.cpp
   menu.cpp
   system.cpp
+  ship.cpp
 )
 target_link_libraries(GBjam11 GraphicsEnv ResourceLoader)
 

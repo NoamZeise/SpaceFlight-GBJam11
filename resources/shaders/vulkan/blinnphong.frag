@@ -61,7 +61,7 @@ void main()
     //-inFragPos;
     vec3 lightDir = normalize(-inFragPos);//normalize(-lighting.direction.xyz);
     float lambertian = max(dot(lightDir, normal), 0.0) * pc.props[1]
-      + 1000 * int(!bool(pc.props[1]));
+      + 0.7 * int(!bool(pc.props[1]));
     vec3 diffuse = lighting.diffuse.xyz * lighting.diffuse.w * lambertian;
     
     vec3 viewDir = normalize(lighting.camPos.xyz - inFragPos);

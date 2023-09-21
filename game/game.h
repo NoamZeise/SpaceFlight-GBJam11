@@ -18,13 +18,15 @@
 
 #include "menu.h"
 #include "system.h"
+#include "ship.h"
 
 #define TIME_APP_DRAW_UPDATE
 //#define MULTI_UPDATE_ON_SLOW_DRAW
 
 enum class GameState {
     Menu,
-    Game
+    Game,
+    Debug
 };
 
 class Game {
@@ -66,6 +68,9 @@ private:
     Resource::Font gameFont;
     
     System system;
+    Ship ship;
+    Resource::Model stars;
+    glm::mat4 starModel;
 };
 
 #endif

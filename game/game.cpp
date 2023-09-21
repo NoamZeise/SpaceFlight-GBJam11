@@ -21,6 +21,8 @@ Game::Game(RenderFramework defaultFramework) {
     state.conf.texture_filter_nearest = true;
     state.conf.depth_range_3D[0] = 0.5f;
     state.conf.depth_range_3D[1] = FAR_CLIP_3D;
+    state.conf.depth_range_2D[0] = -10.0f;
+    state.conf.depth_range_2D[1] = 10.0f;
     state.cursor = cursorState::disabled;
     
     manager = new Manager(defaultFramework, state);
@@ -48,6 +50,9 @@ void Game::loadAssets() {
     pixel = manager->render->LoadTexture("textures/pixel.png");
     menu = MainMenu(manager->render);
     system = System(manager->render);
+    ship = Ship(manager->render, glm::vec3(70.0f, 0.0f, 0.0f));
+    stars = manager->render->Load3DModel("models/stars.obj");
+    stars.useShading = false;
 	
     manager->render->LoadResourcesToGPU();
     manager->render->UseLoadedResources();
@@ -75,16 +80,26 @@ void Game::update() {
   case GameState::Menu:
       menuUpdate();
       break;
+  case GameState::Debug:
+      fpcam.update(manager->input, manager->timer);
+      break;
   }
 
   //debug controls
 
-  if(manager->input.kb.press(GLFW_KEY_F1))
+  if(manager->input.kb.press(GLFW_KEY_F1)) {
+      if(state != GameState::Debug) {
+	  state = GameState::Debug;
+	  ship.setPos(fpcam.getPos());
+      }
+      else {
+	  state = GameState::Game;
+	  fpcam.setPos(ship.getPos());
+      }
       fpcam.toggleFasterCam();
+  }
   if(manager->input.kb.press(GLFW_KEY_F2))
       glfwSetWindowShouldClose(manager->window, GLFW_TRUE);
-  
-  fpcam.update(manager->input, manager->timer);
 
   postUpdate();
 #ifdef TIME_APP_DRAW_UPDATE
@@ -111,12 +126,26 @@ void Game::menuUpdate() {
 void Game::gameUpdate() {
     if (input.press(GB::Start))
 	state = GameState::Menu;
-
+    system.Update(manager->timer);
+    ship.Update(input, manager->timer);
 }
 
 void Game::postUpdate() {
-    manager->render->set3DViewMatrixAndFov(fpcam.getViewMatrix(), fpcam.getZoom(),
-					   glm::vec4(fpcam.getPos(), 0.0));
+    camera::FirstPerson *cam = nullptr;
+    switch(state) {
+    case GameState::Debug:
+	cam = &fpcam;
+	break;
+    case GameState::Game:
+	cam = &ship;
+	break;
+    }
+    if(cam != nullptr) {
+	manager->render->set3DViewMatrixAndFov(cam->getViewMatrix(), cam->getZoom(),
+					       glm::vec4(cam->getPos(), 0.0));
+	starModel = glm::scale(glm::translate(glm::mat4(1.0f), cam->getPos()),
+			       glm::vec3(1000));
+    }
 }
 
 void Game::draw() {
@@ -139,9 +168,15 @@ void Game::draw() {
   
     switch(state) {
     case GameState::Game:
+    case GameState::Debug:
 	manager->render->Begin3DDraw();
+	//3D
+	manager->render->DrawModel(stars, starModel, glm::mat4(1.0f));
 	system.Draw(manager->render);
+	
 	manager->render->Begin2DDraw();
+	//2D foreground
+	ship.Draw(manager->render);
 	break;
     case GameState::Menu:
 	menu.Draw(manager->render);

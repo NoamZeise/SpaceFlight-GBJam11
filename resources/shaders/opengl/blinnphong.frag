@@ -44,7 +44,7 @@ void main()
   vec3 lightDir = normalize(-inFragPos);
 
   float lambertian = max(dot(normal, lightDir), 0.0) * int(useShading)
-    + int(!useShading) * 1000;
+    + 0.7 * int(!useShading);
   vec3 diffuse = lighting.diffuse.xyz * lighting.diffuse.w * lambertian;
 
   float specularIntensity = 0.0;

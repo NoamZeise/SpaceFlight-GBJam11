@@ -22,24 +22,26 @@ namespace camera {
       glm::mat4 getViewMatrix();
       float getZoom();
       glm::vec3 getPos() { return _position; }
-      void update(gamehelper::Input &input, gamehelper::Timer &timer);
+      virtual void update(gamehelper::Input &input, gamehelper::Timer &timer);
       void setSpeed(float speed) { this->_slowerSpeed = speed;
 	  useFaster = true;
 	  this->toggleFasterCam();
       }
       void toggleFasterCam();
+      void setPos(glm::vec3 pos);
 
-  private:
+  protected:
       glm::vec3 _position;
       glm::vec3 _front;
       glm::vec3 _up;
-      glm::vec3 _right;
+      glm::vec3 _left;
       glm::vec3 _worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
       glm::mat4 view = glm::mat4(1.0f);
       bool viewUpdated = true;
 
       double _yaw = 200.0;
       double _pitch = -20.0;
+      double _roll = 0;
 
       float _speed = 0.01f;
       float _slowerSpeed = 0.01f;

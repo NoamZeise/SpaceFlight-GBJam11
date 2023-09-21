@@ -9,12 +9,14 @@
 class Planet {
  public:
     Planet(){}
-    Planet(Resource::Model model, glm::mat4 modelMat);
+    Planet(Resource::Model model, glm::mat4 modelMat, float speed);    
     void Draw(Render *render);
+    void Update(gamehelper::Timer &timer);
  private:
     Resource::Model model;
     glm::mat4 modelMat;
     glm::mat4 normMat;
+    float speed = 0.0f;
 };
 
 
@@ -23,6 +25,7 @@ class System {
     System(){}
     System(Render *render);
     void Draw(Render *render);
+    void Update(gamehelper::Timer &timer);
  private:
     Planet sun;
     std::vector<Planet> planets;
