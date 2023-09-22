@@ -21,9 +21,9 @@ Game::Game(RenderFramework defaultFramework) {
     state.conf.texture_filter_nearest = true;
     state.conf.depth_range_3D[0] = 0.5f;
     state.conf.depth_range_3D[1] = FAR_CLIP_3D;
-    state.conf.depth_range_2D[0] = -10.0f;
-    state.conf.depth_range_2D[1] = 10.0f;
-    state.cursor = cursorState::disabled;
+    state.conf.depth_range_2D[0] = -20.0f;
+    state.conf.depth_range_2D[1] = 20.0f;
+    state.cursor = cursorState::hidden;
     
     manager = new Manager(defaultFramework, state);
     
@@ -144,7 +144,7 @@ void Game::postUpdate() {
 	manager->render->set3DViewMatrixAndFov(cam->getViewMatrix(), cam->getZoom(),
 					       glm::vec4(cam->getPos(), 0.0));
 	starModel = glm::scale(glm::translate(glm::mat4(1.0f), cam->getPos()),
-			       glm::vec3(1000));
+			       glm::vec3(2000));
     }
 }
 
