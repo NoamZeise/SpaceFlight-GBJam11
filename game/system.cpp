@@ -29,7 +29,7 @@ System::System(Render *render) {
 	    glm::mat4(1.0f),
 	    glm::vec3(30));
     planet.useShading = false;
-    Resource::Texture sunTex = render->LoadTexture("textures/Planet/sun.png");
+    Resource::Texture sunTex = render->LoadTexture("textures/Planet/Sun.png");
     planet.overrideTexID = sunTex.ID;
     sun = Planet(planet, glm::vec3(0), 100, 0.0001f);
     planet.useShading = true;

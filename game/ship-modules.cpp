@@ -3,6 +3,8 @@
 #include "gb_consts.h"
 #include <graphics/glm_helper.h>
 
+#include <logger.h>
+
 Module::Module(Resource::Texture tex, glm::vec4 pos, float depth) {
     this->tex = tex;
     this->pos = pos;
@@ -17,16 +19,21 @@ Module::Module(Resource::Texture tex, glm::vec4 pos, float depth) {
 void Module::Update(gamehelper::Timer &timer) {
   
     if(shakeLevel > 0)
-	rotVel = shakeLevel * abs(shakeLevel) * rotDir * timer.FrameElapsed() * 0.1;
+	rotVel = fabs(shakeLevel) * rotDir * timer.FrameElapsed() * 0.1;
     else
 	rotVel = 0 - rotation;
 
-    if(abs(rotVel) > 0) {
+    
+    
+    LOG("rot: " << rotation);
+    LOG("rotVel: " << rotVel);
+    if(fabs(rotVel) > 0) {
 	rotation += rotVel * timer.FrameElapsed() * 0.01;
+	LOG("+ : " << rotVel * timer.FrameElapsed() * 0.01);
 	changed = true;
     }
 
-    if(abs(rotation) > maxRotate) {
+    if(fabs(rotation) > maxRotate) {
 	rotDir *= -1;
 	rotation = glm::sign(rotation) * maxRotate;
     }  

@@ -12,7 +12,7 @@ public:
     glm::vec4 getPos() { return pos; }
     void setPos(glm::vec4 pos) { this->pos = pos; changed = true; }
     void setShakeLevel(float level) {
-	this->shakeLevel = abs(level) > 0.2 ? level : 0; }
+	this->shakeLevel = fabs(level) > 0.2 ? level : 0; }
     void setMaxRot(float rot) { maxRotate = rot; }
 private:
 
