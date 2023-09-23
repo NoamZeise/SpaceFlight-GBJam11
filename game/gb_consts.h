@@ -6,6 +6,9 @@
 
 #define GB_TEXT_SIZE 1.0f
 
+const float GLASS_DEPTH = 0.0f;
+const float THROTTLE_LIM = 1.0;
+
 // matches flat.frag shader
 const int BASE_COLOUR0 = 0x1c1c1c;
 const int BASE_COLOUR1 = 0x525252;

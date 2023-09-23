@@ -1,8 +1,10 @@
 #include "system.h"
 
-Planet::Planet(Resource::Model model, glm::mat4 modelMat, float speed) {
+Planet::Planet(Resource::Model model, glm::vec3 pos, float radius, float speed) {
     this->model = model;
-    this->modelMat = modelMat;
+    this->modelMat = glm::scale(glm::translate(glm::mat4(1),
+					       pos),
+				glm::vec3(radius));
     this->normMat = glm::inverseTranspose(modelMat);
     this->speed = speed;
 }
@@ -29,7 +31,7 @@ System::System(Render *render) {
     planet.useShading = false;
     Resource::Texture sunTex = render->LoadTexture("textures/Planet/sun.png");
     planet.overrideTexID = sunTex.ID;
-    sun = Planet(planet, middle, 0.0001f);
+    sun = Planet(planet, glm::vec3(0), 100, 0.0001f);
     planet.useShading = true;
 
     //planets
@@ -38,11 +40,14 @@ System::System(Render *render) {
     middle = glm::scale(glm::mat4(1.0f),
 			glm::vec3(5.0f));
     planets.push_back(
-	    Planet(planet, glm::translate(middle, glm::vec3(30, 0, 0)), 0.001f));
+	    Planet(planet, glm::vec3(800, 0, -20), 20.0, 0.0025f));
     planets.push_back(
-	    Planet(planet, glm::translate(middle, glm::vec3(30, 20, 0)), 0.002f));
+	    Planet(planet, glm::vec3(1240, -200, -10), 30.0, 0.001f));
     planets.push_back(
-	    Planet(planet, glm::translate(middle, glm::vec3(-30, -30, 0)), 0.005f));
+	    Planet(planet, glm::vec3(-600, -100, 20), 15.0, 0.005f));
+
+    planets.push_back(Planet(planet, glm::vec3(140, 0, 0), 1, 0));
+    planets.push_back(Planet(planet, glm::vec3(800, 0, 27), 1, 0));
 }
 
 void System::Update(gamehelper::Timer &timer) {

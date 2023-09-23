@@ -9,7 +9,7 @@
 class Planet {
  public:
     Planet(){}
-    Planet(Resource::Model model, glm::mat4 modelMat, float speed);    
+    Planet(Resource::Model model, glm::vec3 pos, float radius, float speed);    
     void Draw(Render *render);
     void Update(gamehelper::Timer &timer);
  private:

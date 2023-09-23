@@ -12,6 +12,8 @@
 const float SPECULAR_INTENSITY = 10.0f;
 const float FAR_CLIP_3D = 100000000000000.0f;
 
+const float CAM_START_X = 160.0f;
+
 Game::Game(RenderFramework defaultFramework) {
     ManagerState state;
     state.conf.target_resolution[0] = GB_WIDTH;
@@ -31,7 +33,7 @@ Game::Game(RenderFramework defaultFramework) {
     screenMat = glmhelper::calcMatFromRect(glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT), 0,
 					   // should be furthest in the background
 					   state.conf.depth_range_2D[0] + 0.01f);
-    fpcam = camera::FirstPerson(glm::vec3(70.0f, 0.0f, 0.0f));
+    fpcam = camera::FirstPerson(glm::vec3(CAM_START_X, 0.0f, 0.0f));
     fpcam.setSpeed(0.001f);
     finishedDrawSubmit = true;
     manager->render->setPalette(menu.getPalette().toShaderPalette());
@@ -50,7 +52,7 @@ void Game::loadAssets() {
     pixel = manager->render->LoadTexture("textures/pixel.png");
     menu = MainMenu(manager->render);
     system = System(manager->render);
-    ship = Ship(manager->render, glm::vec3(70.0f, 0.0f, 0.0f));
+    ship = Ship(manager->render, glm::vec3(CAM_START_X, 0.0f, 0.0f));
     stars = manager->render->Load3DModel("models/stars.obj");
     stars.useShading = false;
 	
@@ -90,6 +92,7 @@ void Game::update() {
   if(manager->input.kb.press(GLFW_KEY_F1)) {
       if(state != GameState::Debug) {
 	  state = GameState::Debug;
+	  glfwSetInputMode(manager->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	  ship.setPos(fpcam.getPos());
       }
       else {
