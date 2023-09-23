@@ -30,6 +30,13 @@ namespace camera {
       void toggleFasterCam();
       void setPos(glm::vec3 pos);
 
+      void updateView() {
+	  if(viewUpdated) {
+	      view = glm::lookAt(_position, _position + _front, _up);
+	      viewUpdated = false;
+	  }
+      }
+
   protected:
       glm::vec3 _position;
       glm::vec3 _front;

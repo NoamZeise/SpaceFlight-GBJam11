@@ -9,8 +9,9 @@
 #include <logger.h>
 #include <stdio.h>
 
+#include "gb_consts.h"
+
 const float SPECULAR_INTENSITY = 10.0f;
-const float FAR_CLIP_3D = 100000000000000.0f;
 
 const float CAM_START_X = 160.0f;
 
@@ -21,7 +22,7 @@ Game::Game(RenderFramework defaultFramework) {
     state.conf.mip_mapping = false;
     state.conf.multisampling = false;
     state.conf.texture_filter_nearest = true;
-    state.conf.depth_range_3D[0] = 0.5f;
+    state.conf.depth_range_3D[0] = NEAR_CLIP_3D;
     state.conf.depth_range_3D[1] = FAR_CLIP_3D;
     state.conf.depth_range_2D[0] = -20.0f;
     state.conf.depth_range_2D[1] = 20.0f;

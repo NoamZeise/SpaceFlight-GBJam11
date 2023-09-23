@@ -13,8 +13,9 @@ public:
     TargetMod(Resource::Texture onscreen,
 	   Resource::Texture offscreen);
     void Update(gamehelper::Timer &timer,
-		glm::vec3 pos,
-		glm::vec3 front);
+		glm::mat4 viewMat,
+		float fov);
+    void Draw(Render *render) override;
     void setTarget(glm::vec3 target) {
 	this->target = target;
 	targeting = true;

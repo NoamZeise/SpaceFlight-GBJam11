@@ -4,6 +4,15 @@
 #include <graphics/glm_helper.h>
 #include <logger.h>
 
+const float BASE_FOV = 40.0f;
+const float THROTTLE_FOV = 8.0f;
+const float SPEED_FOV = 400.0f;
+
+void logVec3(glm::vec3 vec) {
+    LOG("x: " << vec.x << " , y: " << vec.y <<
+	" , z: " << vec.z);
+}
+
 TargetMod::TargetMod(Resource::Texture onscreen,
 		     Resource::Texture offscreen)
     : Module(onscreen, glm::vec4(0), GLASS_DEPTH + 0.15f) {
@@ -11,15 +20,62 @@ TargetMod::TargetMod(Resource::Texture onscreen,
     this->offscreen = offscreen;
 }
 
-void TargetMod::Update(gamehelper::Timer &timer,
-		       glm::vec3 pos,
-		       glm::vec3 front) {
-    Module::Update(timer);
+void correctTarg(float &fixed, float &variable) {
+    if(fixed != 0)
+	variable /= fabs(fixed);
+    fixed = glm::sign(fixed);
+}
 
-    glm::vec3 tg = glm::normalize(target - pos);
-    float angle = acos(glm::dot(glm::normalize(front), tg));
-    LOG("angle: " << angle);
-		       
+void TargetMod::Update(gamehelper::Timer &timer,
+		       glm::mat4 viewMat,
+		       float fov) {
+    if(!targeting) {
+	return;
+    }
+    glm::mat4 proj = glm::perspective(glm::radians(fov),
+				      (float)GB_WIDTH / (float)GB_HEIGHT,
+				      NEAR_CLIP_3D, FAR_CLIP_3D);
+    glm::vec4 clip = proj * viewMat * glm::vec4(target.x, target.y, target.z, 1);
+    
+    glm::vec2 screen(clip.x / clip.w, -clip.y / clip.w);
+    float dist = clip.z;
+
+    screen *= glm::sign(dist);
+    
+    if(fabs(screen.x) <= 1 && fabs(screen.y) <= 1 &&
+       dist > 0) {
+	this->setTex(this->onscreen);
+	this->setPos(glm::vec2(((screen.x + 1) / 2) * GB_WIDTH - (this->onscreen.dim.x / 2),
+			       ((screen.y + 1) / 2) * GB_HEIGHT - (this->onscreen.dim.y / 2)));
+    } else {
+	this->setTex(this->offscreen);
+	
+	if(fabs(screen.x) > fabs(screen.y))
+	    correctTarg(screen.x, screen.y);
+	else
+	    correctTarg(screen.y, screen.x);
+
+	//point in dir of target
+	glm::vec2 norm = glm::normalize(screen);
+	float angle = atan2(norm.y, norm.x) + (glm::pi<float>() / 2);
+	this->setBaseRot(angle * 180 / glm::pi<float>());
+	glm::vec2 texPos = glm::vec2(
+		((screen.x + 1) / 2) * GB_WIDTH,
+		((screen.y + 1) / 2) * GB_HEIGHT);
+	if(texPos.x > GB_WIDTH - offscreen.dim.x)
+	    texPos.x = GB_WIDTH - offscreen.dim.x;
+	if(texPos.y > GB_HEIGHT - offscreen.dim.y)
+	    texPos.y = GB_HEIGHT - offscreen.dim.y;
+	this->setPos(texPos);
+    }
+
+    Module::Update(timer);
+}
+
+void TargetMod::Draw(Render *render) {
+    if(!targeting)
+	return;
+    Module::Draw(render);
 }
 
 Ship::Ship(Render *render, glm::vec3 position)
@@ -56,7 +112,7 @@ void rotQ(float angle, glm::vec3 axis, glm::vec3 *target, glm::vec3 *correct) {
 }
 
 void Ship::controls(GbInput &input, gamehelper::Timer &timer) {
-    float sp = _speed * timer.FrameElapsed();
+    float sp = _speed * timer.FrameElapsed(); 
 
     float pitch = 0, yaw = 0, roll = 0;
     
@@ -90,9 +146,6 @@ void Ship::controls(GbInput &input, gamehelper::Timer &timer) {
     }
 
     //LOG("speed: " << currentSpeed);
-
-    //LOG("x: " << velocityVec.x << " , y: " << velocityVec.y <<
-    //	" , z: " << velocityVec.z);
     
     if(input.hold(GB::Up))
 	*updown += sp;
@@ -114,19 +167,22 @@ void Ship::controls(GbInput &input, gamehelper::Timer &timer) {
     rotQ(roll, _front, &_up, &_left);
     
     viewUpdated = true;
+    updateView();
 }
 
 void Ship::Update(GbInput &input, gamehelper::Timer &timer) {
     controls(input, timer);
+
+    float additionalFov = (throttlePos > 0 ? (throttlePos * THROTTLE_FOV) : 0)
+	+ (currentSpeed * SPEED_FOV);
+    _zoom = additionalFov + BASE_FOV;
+    
     shipGlass.setShakeLevel(throttlePos);
     shipGlass.Update(timer);
     aim.setShakeLevel(throttlePos);
     aim.Update(timer);
-    target.Update(timer, _position, _front);
+    target.Update(timer, view, _zoom);
     throttle.Update(timer, throttlePos, currentSpeed);
-
-    //FIX ME
-    _zoom = (currentSpeed * 2500) + 40.0;
 }
 
 void Ship::Draw(Render *render) {

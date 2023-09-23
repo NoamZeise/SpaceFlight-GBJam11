@@ -21,21 +21,17 @@ void Module::Update(gamehelper::Timer &timer) {
     if(shakeLevel > 0)
 	rotVel = fabs(shakeLevel) * rotDir * timer.FrameElapsed() * 0.1;
     else
-	rotVel = 0 - rotation;
+	rotVel = baseRot - rotation;
 
-    
-    
-    LOG("rot: " << rotation);
-    LOG("rotVel: " << rotVel);
     if(fabs(rotVel) > 0) {
 	rotation += rotVel * timer.FrameElapsed() * 0.01;
-	LOG("+ : " << rotVel * timer.FrameElapsed() * 0.01);
 	changed = true;
     }
 
-    if(fabs(rotation) > maxRotate) {
+    if(fabs(rotation) > fabs(maxRotate) + fabs(baseRot)) {
 	rotDir *= -1;
 	rotation = glm::sign(rotation) * maxRotate;
+	
     }  
     
     if(posVel.x == 0 && posVel.y == 0) {

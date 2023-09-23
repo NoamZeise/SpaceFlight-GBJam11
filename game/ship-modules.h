@@ -8,12 +8,29 @@ public:
     Module(){}
     Module(Resource::Texture tex, glm::vec4 pos, float depth);
     void Update(gamehelper::Timer &timer);
-    void Draw(Render *render);
+    virtual void Draw(Render *render);
     glm::vec4 getPos() { return pos; }
-    void setPos(glm::vec4 pos) { this->pos = pos; changed = true; }
+    void setPos(glm::vec4 pos) { this->pos = pos;
+	if(pos.z == 0) this->pos.z = tex.dim.x;
+	if(pos.w == 0) this->pos.w = tex.dim.y;
+	changed = true; }
+    void setPos(glm::vec2 pos) { this->pos.x = pos.x; this->pos.y = pos.y;
+	changed = true; }
     void setShakeLevel(float level) {
 	this->shakeLevel = fabs(level) > 0.2 ? level : 0; }
     void setMaxRot(float rot) { maxRotate = rot; }
+    void setTex(Resource::Texture tex) {
+	this->tex = tex;
+	this->pos.z = tex.dim.x;
+	this->pos.w = tex.dim.y;
+	changed = true;
+    }
+    void setBaseRot(float rot) {
+	this->baseRot = rot;
+	this->rotation = this->baseRot;
+	changed = true;
+    }
+
 private:
 
     void updateMat();
@@ -29,6 +46,7 @@ private:
     float shakeLevel = 0;
     float rotDir = 1;
 
+    float baseRot = 0;
     float maxRotate = 2.0f;
     
     float rotation = 0;

@@ -9,11 +9,7 @@ namespace camera {
   }
 
   glm::mat4 FirstPerson::getViewMatrix() {
-      if(viewUpdated) {
-	  view = glm::lookAt(_position, _position + _front, _up);
-	  viewUpdated = false;
-	  return view;
-      }
+      updateView();
       return view;
   }
 
@@ -95,6 +91,7 @@ namespace camera {
 
       calculateVectors();
       //std::cout << "X:" << _position.x << " Y:" << _position.y << " Z:" << _position.z << std::endl;
+      updateView();
   }
 
   void FirstPerson::calculateVectors() {
