@@ -87,17 +87,39 @@ Ship::Ship(Render *render, glm::vec3 position)
 		 glm::vec4((GB_WIDTH / 2) - 3, (GB_HEIGHT / 2) - 3, 0, 0),
 		 GLASS_DEPTH);
     aim.setMaxRot(0.0f);
+
+    ebrakeMod = Module(render->LoadTexture("textures/ship/ebrake.png"),
+		       glm::vec4(60, 70, 0, 0),
+		       GLASS_DEPTH + 0.1f);
+    ebrakeMod.setShakeLevel(1.0);
+
+    auto critTex = render->LoadTexture("textures/ship/criticaldmg.png");
+    criticalDmg = Module(critTex,
+			 glm::vec4(-critTex.dim.x/6, -critTex.dim.y/6, 0, 0),
+			 GLASS_DEPTH - 0.01f);
+    criticalDmg.setBaseRot(5.0f);
+    criticalDmg.setShakeLevel(1);
+    
     throttle = Throttle(render);
 
     target = TargetMod(render->LoadTexture("textures/ship/target-onscreen.png"),
 		       render->LoadTexture("textures/ship/target-offscreen.png"));
 
-    target.setTarget(glm::vec3(800, 0, 27));
+    targets.push_back(target);
+    targets.back().setTarget(glm::vec3(-400, 200, 0));
 
     _speed = 0.0001f;
     _front = glm::vec3(-1, 0, 0);
     _up = glm::vec3(0, 0, 1);
     _left = glm::vec3(0, -1, 0);
+    
+    setSpawn();
+}
+
+void Ship::setSpawn() {
+    spawn = _position;
+    spawnFront = _front;
+    spawnUp = _up;
 }
 
 glm::vec3 mulv3(long double scalar, glm::vec3 vec) {
@@ -119,21 +141,24 @@ void Ship::controls(GbInput &input, gamehelper::Timer &timer) {
     float* updown = &pitch;
     float* leftright = &roll;
     float lrfactor = 1.4;
-    float throttleSpeed = this->throttleSpeed;
 
     //alt controls
-    if(input.hold(GB::B)) {
+    /*if(input.hold(GB::B)) {
 	leftright = &yaw;
 	lrfactor = -1;
 	throttleSpeed *= -1;
-    }
+	}*/
     
     if(input.hold(GB::A)) {
 	throttlePos += timer.FrameElapsed() * throttleSpeed;
-	throttlePos = throttlePos > THROTTLE_LIM ? THROTTLE_LIM
-	    : throttlePos < -THROTTLE_LIM ? -THROTTLE_LIM
-	    : throttlePos;
     }
+    if(input.hold(GB::B)) {
+	throttlePos -= timer.FrameElapsed() * throttleSpeed;
+    }
+    
+    throttlePos = throttlePos > THROTTLE_LIM ? THROTTLE_LIM
+	: throttlePos < -THROTTLE_LIM ? -THROTTLE_LIM
+	: throttlePos;
 
     if(throttlePos > 0) {
 	velocityVec += mulv3(throttlePos * throttlePos * shipSpeed * timer.FrameElapsed(), _front);
@@ -170,24 +195,80 @@ void Ship::controls(GbInput &input, gamehelper::Timer &timer) {
     updateView();
 }
 
-void Ship::Update(GbInput &input, gamehelper::Timer &timer) {
-    controls(input, timer);
+const float EBRAKE_MIN_SPEED = 0.001f;
 
-    float additionalFov = (throttlePos > 0 ? (throttlePos * THROTTLE_FOV) : 0)
+void Ship::Update(GbInput &input, gamehelper::Timer &timer) {
+    if(!respawning)
+	controls(input, timer);
+
+    float additionalFov = (throttlePos > 0
+			   ? (throttlePos * THROTTLE_FOV) : 0)
 	+ (currentSpeed * SPEED_FOV);
-    _zoom = additionalFov + BASE_FOV;
+    _zoom = additionalFov + BASE_FOV;    
     
     shipGlass.setShakeLevel(throttlePos);
     shipGlass.Update(timer);
     aim.setShakeLevel(throttlePos);
     aim.Update(timer);
-    target.Update(timer, view, _zoom);
+    for(auto& t: targets)
+	t.Update(timer, view, _zoom);
     throttle.Update(timer, throttlePos, currentSpeed);
+    if(emergencyBrake) {
+	ebrakeMod.Update(timer);
+    }
+    if(respawning) {
+	respawnTimer += timer.FrameElapsed();
+	criticalDmg.Update(timer);
+	if(respawnTimer > RESPAWN_DELAY) {
+	    respawning = false;
+	    _position = spawn;
+	    velocityVec = glm::vec3(0);
+	    throttlePos = 0;
+	    currentSpeed = 0;
+	    _front = spawnFront;
+	    _up = spawnUp;
+	    _left = glm::cross(_up, _front);
+	    respawning = false;
+	}
+    }
+    emergencyBrake = false;
 }
 
 void Ship::Draw(Render *render) {
+    if(respawnTimer < RESPAWN_DELAY)
+	criticalDmg.Draw(render);
     shipGlass.Draw(render);
     throttle.Draw(render);
+    if(emergencyBrake)
+	ebrakeMod.Draw(render);
     aim.Draw(render);
-    target.Draw(render);
+    for(auto& t: targets)
+	t.Draw(render);
 }
+
+void Ship::PlanetCollision(Collision collision, gamehelper::Timer &timer) {
+    glm::vec3 dir;
+    float angle;
+    switch(collision.state) {
+    case CollisionState::None: return;
+    case CollisionState::Close:
+	dir = collision.pos - _position;
+	angle = acos(glm::dot(glm::normalize(dir), glm::normalize(velocityVec)));
+	emergencyBrake = true;
+	if(angle * 2 < 2.4 && currentSpeed > EBRAKE_MIN_SPEED) {
+	    angle = 0.05f * timer.FrameElapsed();
+	    velocityVec -= velocityVec * (angle < 0.9 ? angle : 0.9f);
+	}
+	break;
+    case CollisionState::Collide:
+	velocityVec = glm::vec3(0);
+	emergencyBrake = true ;
+	if(!respawning) {
+	    respawnTimer = 0;
+	    respawning = true;
+	}
+	
+	break;
+    }
+}
+

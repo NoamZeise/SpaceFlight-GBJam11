@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include "gb_consts.h"
+#include "collision.h"
 
 const float SPECULAR_INTENSITY = 10.0f;
 
@@ -24,8 +25,8 @@ Game::Game(RenderFramework defaultFramework) {
     state.conf.texture_filter_nearest = true;
     state.conf.depth_range_3D[0] = NEAR_CLIP_3D;
     state.conf.depth_range_3D[1] = FAR_CLIP_3D;
-    state.conf.depth_range_2D[0] = -20.0f;
-    state.conf.depth_range_2D[1] = 20.0f;
+    state.conf.depth_range_2D[0] = -50.0f;
+    state.conf.depth_range_2D[1] = 50.0f;
     state.cursor = cursorState::hidden;
     
     manager = new Manager(defaultFramework, state);
@@ -85,6 +86,10 @@ void Game::update() {
       break;
   case GameState::Debug:
       fpcam.update(manager->input, manager->timer);
+      if(manager->input.kb.hold(GLFW_KEY_LEFT_ALT))
+	  fpcam.setSpeed(0.5f);
+      else
+	  fpcam.setSpeed(0.05f);
       break;
   }
 
@@ -132,6 +137,21 @@ void Game::gameUpdate() {
 	state = GameState::Menu;
     system.Update(manager->timer);
     ship.Update(input, manager->timer);
+
+    Collision c = system.planetCollisions(ship.getPos());
+    ship.PlanetCollision(c, manager->timer);
+
+    /*switch(s) {
+	case CollisionState::None:
+	    LOG("no collisions");
+	    break;
+    case CollisionState::Close:
+	LOG("CLOSE");
+	break;
+    case CollisionState::Collide:
+	LOG("collided");
+	break;
+	}*/
 }
 
 void Game::postUpdate() {
@@ -148,7 +168,7 @@ void Game::postUpdate() {
 	manager->render->set3DViewMatrixAndFov(cam->getViewMatrix(), cam->getZoom(),
 					       glm::vec4(cam->getPos(), 0.0));
 	starModel = glm::scale(glm::translate(glm::mat4(1.0f), cam->getPos()),
-			       glm::vec3(2000));
+			       glm::vec3(10000));
     }
 }
 

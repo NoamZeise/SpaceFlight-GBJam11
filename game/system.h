@@ -6,19 +6,23 @@
 
 #include <vector>
 
-class Planet {
- public:
+#include "collision.h"
+
+struct Planet {
     Planet(){}
-    Planet(Resource::Model model, glm::vec3 pos, float radius, float speed);    
+    Planet(std::string name, Resource::Model model, glm::vec3 pos, float radius, float speed);    
     void Draw(Render *render);
     void Update(gamehelper::Timer &timer);
- private:
+    void rotate(float a);
+    
+    std::string name;
     Resource::Model model;
     glm::mat4 modelMat;
     glm::mat4 normMat;
     float speed = 0.0f;
+    float radius;
+    glm::vec3 pos;
 };
-
 
 class System {
  public:
@@ -26,6 +30,8 @@ class System {
     System(Render *render);
     void Draw(Render *render);
     void Update(gamehelper::Timer &timer);
+    Collision planetCollisions(glm::vec3 pos);
+    
  private:
     Planet sun;
     std::vector<Planet> planets;

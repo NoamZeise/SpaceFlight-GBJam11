@@ -18,6 +18,7 @@ public:
     frameElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentUpdate - lastUpdate).count();
   }
 
+    // get the previous frame time in milliseconds
   long long FrameElapsed() {
       return frameElapsed;
   }
