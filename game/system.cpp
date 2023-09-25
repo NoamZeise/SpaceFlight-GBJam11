@@ -1,7 +1,12 @@
 #include "system.h"
 
+#include <GameHelper/random.h>
+#include "system_consts.h"
+#include "logs.h"
+
+
 const float CLOSE_FACTOR = 1.2f;
-const float COLLIDE_FACTOR = 1.01f;
+const float COLLIDE_FACTOR = 1.05f;
 
 Planet::Planet(std::string name, Resource::Model model, glm::vec3 pos, float radius, float speed) {
     this->name = name;
@@ -9,10 +14,10 @@ Planet::Planet(std::string name, Resource::Model model, glm::vec3 pos, float rad
     this->modelMat = glm::scale(glm::translate(glm::mat4(1),
 					       pos),
 				glm::vec3(radius));
-    this->normMat = glm::inverseTranspose(modelMat);
     this->speed = speed;
     this->radius = radius;
     this->pos = pos;
+    rotate(0);
 }
 
 void Planet::Draw(Render *render) {
@@ -20,101 +25,65 @@ void Planet::Draw(Render *render) {
 }
 
 void Planet::rotate(float a) {
-    this->modelMat = glm::rotate(this->modelMat, a,
-				 glm::vec3(0, 0, 1));
+    this->modelMat = glm::rotate(this->modelMat, a, axisOfRot);
+    this->normMat = glm::inverseTranspose(this->modelMat);
 }
 
 void Planet::Update(gamehelper::Timer &timer) {
-    if(speed != 0) {
-	this->rotate(timer.FrameElapsed() * speed * 0.001f);			
-	this->normMat = glm::inverseTranspose(this->modelMat);
-    }
+    if(speed != 0)
+	this->rotate(timer.FrameElapsed() * speed * 0.001f);
+}
+
+const float LOG_SCALE = 0.1;
+
+LogModel::LogModel(Resource::Model model, glm::vec3 pos)
+    : Planet("", model, pos, LOG_SCALE, random::real()) {
+    axisOfRot = glm::vec3(random::real(), random::real(), random::real());
 }
 
 System::System(Render *render) {
     Resource::Model planet = render->Load3DModel("models/planet.obj");
-
-    //sun
-    glm::mat4 middle = glm::scale(
-	    glm::mat4(1.0f),
-	    glm::vec3(30));
-    planet.useShading = false;
-    Resource::Texture sunTex = render->LoadTexture("textures/Planet/Sun.png");
-    planet.overrideTexID = sunTex.ID;
-    sun = Planet("sun", planet, glm::vec3(0), 100, 0.0001f);
-    planet.useShading = true;
-
-    //planets
-    Resource::Texture planetTex = render->LoadTexture("textures/Planet/planet1.png");
-    planet.overrideTexID = planetTex.ID;
-    middle = glm::scale(glm::mat4(1.0f),
-			glm::vec3(5.0f));
-    planets.push_back(
-	    Planet("sila", planet, glm::vec3(800, 0, -20), 20.0, 0.0025f));
-    planets.push_back(Planet("sila-1", planet, glm::vec3(800, 0, 27), 1, 0));
     
-    planet.overrideTexID = render->LoadTexture("textures/Planet/metal-planet.png").ID;
-    planets.push_back(
-	    Planet("RW-1011", planet, glm::vec3(1240, -200, -10), 30.0, 0.001f));
+    for(auto &t: SYSTEM_PLANETS) {
+	planet.useShading = t.shading;
+	if(t.tex != "")
+	    planet.overrideTexID = render->LoadTexture(t.tex).ID;
+	else planet.overrideTexID = -1;
+	planets.push_back(
+		Planet(t.name, planet, t.pos, t.radius, t.speed)
+			  );
+	planets.back().rotate(t.initalRot);
+    }
 
-    planet.overrideTexID = render->LoadTexture("textures/Planet/organic1.png").ID;
-    planets.push_back(
-	    Planet("jomah", planet, glm::vec3(-600, -100, 20), 15.0, 0.005f));
-
-    planet.overrideTexID = render->LoadTexture("textures/Planet/earthlike.png").ID;
-    planets.push_back(
-	    Planet("gaia", planet,
-		   glm::vec3(-1400, 200, 0), 40.5, 0.01f));
-    planet.overrideTexID = render->LoadTexture("textures/Planet/moon.png").ID;
-    planets.push_back(
-	    Planet("diana", planet,
-		   glm::vec3(-1400, 50, 10), 6.5, 0.001f));
-
-    
-    planet.overrideTexID = render->LoadTexture("textures/Planet/triangles.png").ID;
-    planets.push_back(
-	    Planet("ripel-1", planet,
-		   glm::vec3(890, 1640, -20), 30.5, 0.005f));
-    planets.push_back(
-	    Planet("ripel-2", planet,
-		   glm::vec3(950, 1615, 20), 23.1, 0.005f));
-    planets.back().rotate(glm::pi<float>());
-    
-    /*    planet.overrideTexID = render->LoadTexture("textures/Planet/lines.png").ID;
-    planets.push_back(
-	    Planet("a", planet,
-	    glm::vec3(200, 10, 0), 4.5, 0.1f));
-    planet.overrideTexID = render->LoadTexture("textures/Planet/noise.png").ID;
-    planets.push_back(
-	    Planet("a", planet,
-	    glm::vec3(170, 10, 0), 4.5, 0.1f));
-    planet.overrideTexID = render->LoadTexture("textures/Planet/moon.png").ID;
-    planets.push_back(
-	    Planet("mon", planet,
-	    glm::vec3(150, 0, 0), 4.5, 0.1f));*/
+    Resource::Model logModel = render->Load3DModel("models/log.obj");
+    std::vector<SystemLog> logs = getLogs();
+    for(auto& l: logs) {
+	this->logs.push_back(LogModel(logModel, l.pos));
+    }
 }
 
 void System::Update(gamehelper::Timer &timer) {
-    sun.Update(timer);
     for(auto &p: planets)
 	p.Update(timer);
+    for(auto& l: logs) {
+	l.Update(timer);
+    }
 }
 
 void System::Draw(Render *render) {
-    sun.Draw(render);
     for(auto &p: planets)
 	p.Draw(render);
+    for(auto &l: logs)
+	l.Draw(render);
 }
 
-#include <logger.h>
+const float SHIP_RAD = 3.0f;
 
-const float SHIP_RAD = 2.0f;
-
-void checkCol(Planet &p, glm::vec3 pos, Collision *col) {
+void checkCol(Planet &p, glm::vec3 pos, Collision *col,
+	      float closeOffset) {
     glm::vec3 point = pos - p.pos;
     float dist = glm::dot(point, point);
-    
-    float close = ((p.radius + SHIP_RAD) * CLOSE_FACTOR );
+    float close = ((p.radius + SHIP_RAD) * CLOSE_FACTOR ) + closeOffset;
     if(dist < close * close)
 	col->state = CollisionState::Close;
     else
@@ -128,10 +97,21 @@ void checkCol(Planet &p, glm::vec3 pos, Collision *col) {
 Collision System::planetCollisions(glm::vec3 pos) {
     Collision col = {CollisionState::None, glm::vec3(0) };
     for(auto& p: planets) {
-	checkCol(p, pos, &col);
+	checkCol(p, pos, &col, 0);
 	if(col.state == CollisionState::Collide)
 	    return col;
     }
-    checkCol(sun, pos, &col);
+    return col;
+}
+
+Collision System::logCollisions(glm::vec3 pos) {
+    Collision col = {CollisionState::None, glm::vec3(0) };
+    for(int i = 0; i < logs.size(); i++) {
+	checkCol(logs[i], pos, &col, 50);
+	if(col.state == CollisionState::Collide) {
+	    logs.erase(logs.begin() + i--);
+	    return col;
+	}
+    }
     return col;
 }

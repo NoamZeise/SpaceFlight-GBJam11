@@ -4,79 +4,18 @@
 #include <graphics/glm_helper.h>
 #include <logger.h>
 
-const float BASE_FOV = 40.0f;
-const float THROTTLE_FOV = 8.0f;
-const float SPEED_FOV = 400.0f;
-
 void logVec3(glm::vec3 vec) {
     LOG("x: " << vec.x << " , y: " << vec.y <<
 	" , z: " << vec.z);
 }
 
-TargetMod::TargetMod(Resource::Texture onscreen,
-		     Resource::Texture offscreen)
-    : Module(onscreen, glm::vec4(0), GLASS_DEPTH + 0.15f) {
-    this->onscreen = onscreen;
-    this->offscreen = offscreen;
-}
+const float BASE_FOV = 40.0f;
+const float THROTTLE_FOV = 8.0f;
+const float SPEED_FOV = 400.0f;
 
-void correctTarg(float &fixed, float &variable) {
-    if(fixed != 0)
-	variable /= fabs(fixed);
-    fixed = glm::sign(fixed);
-}
+const float ROT_SPEED = 0.0000001f;
+const float ROT_MAX = 0.001f;
 
-void TargetMod::Update(gamehelper::Timer &timer,
-		       glm::mat4 viewMat,
-		       float fov) {
-    if(!targeting) {
-	return;
-    }
-    glm::mat4 proj = glm::perspective(glm::radians(fov),
-				      (float)GB_WIDTH / (float)GB_HEIGHT,
-				      NEAR_CLIP_3D, FAR_CLIP_3D);
-    glm::vec4 clip = proj * viewMat * glm::vec4(target.x, target.y, target.z, 1);
-    
-    glm::vec2 screen(clip.x / clip.w, -clip.y / clip.w);
-    float dist = clip.z;
-
-    screen *= glm::sign(dist);
-    
-    if(fabs(screen.x) <= 1 && fabs(screen.y) <= 1 &&
-       dist > 0) {
-	this->setTex(this->onscreen);
-	this->setPos(glm::vec2(((screen.x + 1) / 2) * GB_WIDTH - (this->onscreen.dim.x / 2),
-			       ((screen.y + 1) / 2) * GB_HEIGHT - (this->onscreen.dim.y / 2)));
-    } else {
-	this->setTex(this->offscreen);
-	
-	if(fabs(screen.x) > fabs(screen.y))
-	    correctTarg(screen.x, screen.y);
-	else
-	    correctTarg(screen.y, screen.x);
-
-	//point in dir of target
-	glm::vec2 norm = glm::normalize(screen);
-	float angle = atan2(norm.y, norm.x) + (glm::pi<float>() / 2);
-	this->setBaseRot(angle * 180 / glm::pi<float>());
-	glm::vec2 texPos = glm::vec2(
-		((screen.x + 1) / 2) * GB_WIDTH,
-		((screen.y + 1) / 2) * GB_HEIGHT);
-	if(texPos.x > GB_WIDTH - offscreen.dim.x)
-	    texPos.x = GB_WIDTH - offscreen.dim.x;
-	if(texPos.y > GB_HEIGHT - offscreen.dim.y)
-	    texPos.y = GB_HEIGHT - offscreen.dim.y;
-	this->setPos(texPos);
-    }
-
-    Module::Update(timer);
-}
-
-void TargetMod::Draw(Render *render) {
-    if(!targeting)
-	return;
-    Module::Draw(render);
-}
 
 Ship::Ship(Render *render, glm::vec3 position)
     : camera::FirstPerson(position) {
@@ -102,13 +41,13 @@ Ship::Ship(Render *render, glm::vec3 position)
     
     throttle = Throttle(render);
 
-    target = TargetMod(render->LoadTexture("textures/ship/target-onscreen.png"),
-		       render->LoadTexture("textures/ship/target-offscreen.png"));
+    shipMenu = MenuMod(render);
 
-    targets.push_back(target);
-    targets.back().setTarget(glm::vec3(-400, 200, 0));
+    messager = ShipMessage(render);
 
-    _speed = 0.0001f;
+    unfoundLogs = getLogs();
+
+    _speed = ROT_SPEED;
     _front = glm::vec3(-1, 0, 0);
     _up = glm::vec3(0, 0, 1);
     _left = glm::vec3(0, -1, 0);
@@ -133,44 +72,30 @@ void rotQ(float angle, glm::vec3 axis, glm::vec3 *target, glm::vec3 *correct) {
     *correct = glm::cross(*target, axis);
 }
 
+float limRot(float *rot) {
+    if(fabs(*rot) > ROT_MAX) {
+	*rot = glm::sign(*rot) * ROT_MAX;
+    }
+    return *rot;
+}
+
 void Ship::controls(GbInput &input, gamehelper::Timer &timer) {
     float sp = _speed * timer.FrameElapsed(); 
 
     float pitch = 0, yaw = 0, roll = 0;
     
-    float* updown = &pitch;
-    float* leftright = &roll;
-    float lrfactor = 1.4;
-
-    //alt controls
-    /*if(input.hold(GB::B)) {
-	leftright = &yaw;
-	lrfactor = -1;
-	throttleSpeed *= -1;
-	}*/
+    float* updown = &pitchVel;
+    float* leftright = &rollVel;
+    const float lrfactor = 1.0;
     
-    if(input.hold(GB::A)) {
+    if(input.hold(GB::A))
 	throttlePos += timer.FrameElapsed() * throttleSpeed;
-    }
-    if(input.hold(GB::B)) {
+    if(input.hold(GB::B))
 	throttlePos -= timer.FrameElapsed() * throttleSpeed;
-    }
     
     throttlePos = throttlePos > THROTTLE_LIM ? THROTTLE_LIM
 	: throttlePos < -THROTTLE_LIM ? -THROTTLE_LIM
 	: throttlePos;
-
-    if(throttlePos > 0) {
-	velocityVec += mulv3(throttlePos * throttlePos * shipSpeed * timer.FrameElapsed(), _front);
-	currentSpeed = glm::length(velocityVec);
-    }
-    else if(throttlePos < 0) {
-	velocityVec += mulv3(timer.FrameElapsed() * shipSpeed * 500 *
-			     -(throttlePos * throttlePos), velocityVec);
-	currentSpeed = glm::length(velocityVec);
-    }
-
-    //LOG("speed: " << currentSpeed);
     
     if(input.hold(GB::Up))
 	*updown += sp;
@@ -182,15 +107,41 @@ void Ship::controls(GbInput &input, gamehelper::Timer &timer) {
     if(input.hold(GB::Right))
 	*leftright -= sp * lrfactor;
 
+    if(input.press(GB::Select)) {
+	state = ShipState::Menu;
+	shipMenu.toggleMenu();
+    }
+}
 
+void Ship::menu(GbInput &input, gamehelper::Timer &timer) {
+    if(input.press(GB::Select) || shipMenu.isExit()) {
+	shipMenu.toggleMenu();
+	state = ShipState::Fly;
+    }
+    shipMenu.Update(input, timer, &targets);
+}
+
+void Ship::physUpdate(gamehelper::Timer &timer) {
+    if(throttlePos > 0) {
+	velocityVec += mulv3(throttlePos * throttlePos * shipSpeed * timer.FrameElapsed(), _front);
+	currentSpeed = glm::length(velocityVec);
+    }
+    else if(throttlePos < 0) {
+	velocityVec += mulv3(timer.FrameElapsed() * shipSpeed * 500 *
+			     -(throttlePos * throttlePos), velocityVec);
+	currentSpeed = glm::length(velocityVec);
+    }
+	    
     _position += mulv3(timer.FrameElapsed(), velocityVec);
+    rotQ(limRot(&pitchVel) * timer.FrameElapsed(), _left, &_front, &_up);
+    rotQ(limRot(&yawVel) * timer.FrameElapsed(), _up, &_left, &_front);
+    rotQ(limRot(&rollVel) * timer.FrameElapsed(), _front, &_up, &_left);
 
-    //LOG("pos.x: " << _position.x << ", pos.y: " << _position.y);
-
-    rotQ(pitch, _left, &_front, &_up);
-    rotQ(yaw, _up, &_left, &_front);
-    rotQ(roll, _front, &_up, &_left);
-    
+    float additionalFov = (throttlePos > 0
+			   ? (throttlePos * THROTTLE_FOV) : 0)
+	+ (currentSpeed * SPEED_FOV);
+    _zoom = additionalFov + BASE_FOV;  
+	 
     viewUpdated = true;
     updateView();
 }
@@ -198,24 +149,39 @@ void Ship::controls(GbInput &input, gamehelper::Timer &timer) {
 const float EBRAKE_MIN_SPEED = 0.001f;
 
 void Ship::Update(GbInput &input, gamehelper::Timer &timer) {
-    if(!respawning)
-	controls(input, timer);
-
-    float additionalFov = (throttlePos > 0
-			   ? (throttlePos * THROTTLE_FOV) : 0)
-	+ (currentSpeed * SPEED_FOV);
-    _zoom = additionalFov + BASE_FOV;    
-    
+    if(!respawning) {
+	switch(state) {
+	case ShipState::Fly:
+	    if(shipMenu.menuInTransition())
+		shipMenu.Update(input, timer, &targets);
+	    controls(input, timer);
+	    break;
+	case ShipState::Menu:
+	    menu(input, timer);
+	    break;
+	}
+	physUpdate(timer);
+    }  
+    messager.Update(timer);
     shipGlass.setShakeLevel(throttlePos);
     shipGlass.Update(timer);
     aim.setShakeLevel(throttlePos);
     aim.Update(timer);
-    for(auto& t: targets)
-	t.Update(timer, view, _zoom);
-    throttle.Update(timer, throttlePos, currentSpeed);
-    if(emergencyBrake) {
-	ebrakeMod.Update(timer);
+    if(targets.size() > 0 || logTargets.size() > 0) {
+	glm::mat4 viewproj =
+	    glm::perspective<float>(
+		glm::radians(_zoom),
+		(float)GB_WIDTH / (float)GB_HEIGHT,
+		NEAR_CLIP_3D, FAR_CLIP_3D)
+	    * view;
+	for(auto& t: targets)
+	    t.Update(timer, viewproj);
+	for(auto& t: logTargets)
+	    t.Update(timer, viewproj);
     }
+    throttle.Update(timer, throttlePos, currentSpeed);
+    if(emergencyBrake)
+	ebrakeMod.Update(timer);
     if(respawning) {
 	respawnTimer += timer.FrameElapsed();
 	criticalDmg.Update(timer);
@@ -228,6 +194,7 @@ void Ship::Update(GbInput &input, gamehelper::Timer &timer) {
 	    _front = spawnFront;
 	    _up = spawnUp;
 	    _left = glm::cross(_up, _front);
+	    pitchVel = rollVel = yawVel = 0;
 	    respawning = false;
 	}
     }
@@ -244,6 +211,11 @@ void Ship::Draw(Render *render) {
     aim.Draw(render);
     for(auto& t: targets)
 	t.Draw(render);
+    for(auto& t: logTargets)
+	t.Draw(render);
+    messager.Draw(render);
+    if(state == ShipState::Menu || shipMenu.menuInTransition())
+	shipMenu.Draw(render);
 }
 
 void Ship::PlanetCollision(Collision collision, gamehelper::Timer &timer) {
@@ -268,6 +240,35 @@ void Ship::PlanetCollision(Collision collision, gamehelper::Timer &timer) {
 	    respawning = true;
 	}
 	
+	break;
+    }
+}
+
+void Ship::LogCollision(Collision c) {
+    switch (c.state) {
+    case CollisionState::Collide:
+	for(int i = 0; i < unfoundLogs.size(); i++)
+	    if(c.pos == unfoundLogs[i].pos) {
+		shipMenu.addLog(unfoundLogs[i]);
+		for(int j = 0; j < logTargets.size(); j++) {
+		    if(logTargets[j].getTarget() == c.pos) {
+			logTargets.erase(logTargets.begin() + j--);
+			break;
+		    }
+		}
+		unfoundLogs.erase(unfoundLogs.begin() + i--);
+		setSpawn();
+		messager.showMessage("Log Found");
+	    }
+	break;
+    case CollisionState::Close:
+	for(int i = 0; i < logTargets.size(); i++) {
+	    if(logTargets[i].getTarget() == c.pos)
+		return;
+	}
+	messager.showMessage("Log Near");
+	logTargets.push_back(shipMenu.getTargetMod());
+	logTargets.back().setTarget(c.pos);
 	break;
     }
 }

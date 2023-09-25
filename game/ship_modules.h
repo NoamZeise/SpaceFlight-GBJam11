@@ -10,6 +10,7 @@ public:
     void Update(gamehelper::Timer &timer);
     virtual void Draw(Render *render);
     glm::vec4 getPos() { return pos; }
+    glm::vec2 getDim() { return tex.dim; }
     void setPos(glm::vec4 pos) { this->pos = pos;
 	if(pos.z == 0) this->pos.z = tex.dim.x;
 	if(pos.w == 0) this->pos.w = tex.dim.y;
@@ -31,9 +32,14 @@ public:
 	changed = true;
     }
 
-private:
+    void setBaseOffset(glm::vec2 off) {
+	basePosOffset = off;
+	changed = true;
+    }
 
     void updateMat();
+
+private:
     
     Resource::Texture tex;
     float depth;
@@ -51,6 +57,7 @@ private:
     
     float rotation = 0;
     float rotVel = 0;
+    glm::vec2 basePosOffset = glm::vec2(0);
     glm::vec2 posOffset = glm::vec2(0);
     glm::vec2 posVel = glm::vec2(0);
 };
@@ -74,5 +81,48 @@ private:
     long double prevThrottle = 0;
     float prevSpeed = 0;
 };
+
+class TargetMod : public Module {
+public:
+    TargetMod() {}
+    TargetMod(Resource::Texture onscreen,
+	   Resource::Texture offscreen);
+    void Update(gamehelper::Timer &timer,
+		glm::mat4 viewprojMat);
+    void Draw(Render *render) override;
+    void setTarget(glm::vec3 target) {
+	this->target = target;
+	targeting = true;
+    }
+    glm::vec3 getTarget() { return target; }
+    void clearTarget() {
+	targeting = false;
+    }
+private:
+    Resource::Texture onscreen;
+    Resource::Texture offscreen;
+    bool targeting = false;
+    glm::vec3 target;
+};
+
+
+const int SHOW_MESSAGE_DELAY = 3000;
+class ShipMessage {
+public:
+    ShipMessage(){}
+    ShipMessage(Render *render);
+    void Update(gamehelper::Timer &timer);
+    void Draw(Render* render);
+    void showMessage(std::string text);
+private:
+    std::string message;
+    float showMessageTimer = SHOW_MESSAGE_DELAY;
+    Resource::Font font;
+    Resource::Texture bg;
+    glm::vec2 off;
+    glm::mat4 model;
+    
+};
+
 
 #endif

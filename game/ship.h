@@ -5,31 +5,10 @@
 #include <GameHelper/camera.h>
 #include "controls.h"
 
-#include "ship-modules.h"
+#include "ship_modules.h"
+#include "ship_menu.h"
 #include "collision.h"
-
-class TargetMod : public Module {
-public:
-    TargetMod() {}
-    TargetMod(Resource::Texture onscreen,
-	   Resource::Texture offscreen);
-    void Update(gamehelper::Timer &timer,
-		glm::mat4 viewMat,
-		float fov);
-    void Draw(Render *render) override;
-    void setTarget(glm::vec3 target) {
-	this->target = target;
-	targeting = true;
-    }
-    void clearTarget() {
-	targeting = false;
-    }
-private:
-    Resource::Texture onscreen;
-    Resource::Texture offscreen;
-    bool targeting = false;
-    glm::vec3 target;
-};
+#include "logs.h"
 
 const float RESPAWN_DELAY = 3000;
 
@@ -41,20 +20,34 @@ class Ship : public camera::FirstPerson {
     void Draw(Render *render);
 
     void PlanetCollision(Collision state, gamehelper::Timer &timer);
+    void LogCollision(Collision state);
     void setSpawn();
     
  private:
 
     void controls(GbInput &input, gamehelper::Timer &timer);
+    void menu(GbInput &input, gamehelper::Timer &timer);
+    void physUpdate(gamehelper::Timer &timer);
+
+    enum class ShipState {
+	Fly,
+	Menu,
+    };
+
+    ShipState state = ShipState::Fly;
     
     Module shipGlass;
     Module aim;
     Module ebrakeMod;
     Module criticalDmg;
     Throttle throttle;
+    ShipMessage messager;
 
-    TargetMod target;
+    MenuMod shipMenu;
     std::vector<TargetMod> targets;
+    std::vector<TargetMod> logTargets;
+
+    std::vector<SystemLog> unfoundLogs;
     
     long double shipSpeed = 0.000001;
     float currentSpeed = 0;
@@ -65,6 +58,10 @@ class Ship : public camera::FirstPerson {
     glm::vec3 spawn;
     glm::vec3 spawnUp;
     glm::vec3 spawnFront;
+
+    float pitchVel = 0;
+    float rollVel = 0;
+    float yawVel = 0;
     
     bool emergencyBrake = false;
     bool respawning = false;

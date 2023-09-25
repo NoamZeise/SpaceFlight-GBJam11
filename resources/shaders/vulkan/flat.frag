@@ -1,7 +1,7 @@
 #version 450
 
 layout(set = 2, binding = 0) uniform sampler texSamp;
-layout(set = 2, binding = 1) uniform texture2D textures[30];
+layout(set = 2, binding = 1) uniform texture2D textures[40];
 
 const int COLOUR0 = int((0x1c / 255.0f) * 100);
 const int COLOUR1 = int((0x52 / 255.0f) * 100);

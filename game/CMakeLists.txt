@@ -6,7 +6,9 @@ add_executable(GBjam11
   menu.cpp
   system.cpp
   ship.cpp
-  ship-modules.cpp
+  ship_modules.cpp
+  ship_menu.cpp
+  logs.cpp
 )
 target_link_libraries(GBjam11 GraphicsEnv ResourceLoader)
 

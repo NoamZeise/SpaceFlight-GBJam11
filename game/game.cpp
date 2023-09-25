@@ -14,7 +14,7 @@
 
 const float SPECULAR_INTENSITY = 10.0f;
 
-const float CAM_START_X = 160.0f;
+const float CAM_START_X = 560.0f;
 
 Game::Game(RenderFramework defaultFramework) {
     ManagerState state;
@@ -140,18 +140,8 @@ void Game::gameUpdate() {
 
     Collision c = system.planetCollisions(ship.getPos());
     ship.PlanetCollision(c, manager->timer);
-
-    /*switch(s) {
-	case CollisionState::None:
-	    LOG("no collisions");
-	    break;
-    case CollisionState::Close:
-	LOG("CLOSE");
-	break;
-    case CollisionState::Collide:
-	LOG("collided");
-	break;
-	}*/
+    c = system.logCollisions(ship.getPos());
+    ship.LogCollision(c);
 }
 
 void Game::postUpdate() {
@@ -189,7 +179,7 @@ void Game::draw() {
 
     //clear background
     manager->render->DrawQuad(pixel, screenMat, COL0);
-  
+
     switch(state) {
     case GameState::Game:
     case GameState::Debug:
