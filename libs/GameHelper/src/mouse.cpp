@@ -40,8 +40,8 @@ double Mouse::scroll() { return this->state.scroll; }
 
 bool Mouse::hold(MouseButton btn) {
     if (btn < 0 || btn > GLFW_MOUSE_BUTTON_LAST) {      
-    #ifdef NDEBUG
-	std::cerr << "Error: Mouse Btn Key Code out of range, returning false\n";       
+#ifdef NDEBUG
+	//std::cerr << "Error: Mouse Btn Key Code out of range, returning false\n";       
 	return false;                                                              
 #else
 	throw std::runtime_error("Mouse Btn Key Code was out of range");

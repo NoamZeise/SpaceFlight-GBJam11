@@ -4,6 +4,7 @@
 #include <iostream>
 
 std::vector<SystemLog> logs;
+glm::vec3 playerSpawn = glm::vec3(600, 0, 0);
 
 std::string logPath = "logs/";
 
@@ -51,17 +52,51 @@ SystemLog getLog(std::ifstream &log) {
     return l;
 }
 
+std::vector<std::string> getFound() {
+    std::ifstream save("ship.save");
+    std::vector<std::string> found;
+    if(save.good()) {
+	bool firstLine = true;
+	std::string line;
+	std::getline(save, line);
+	int space = line.find(' ');
+	playerSpawn.x = atof(line.substr(0, space).c_str());
+	int pSpace = space + 1;
+	space = line.find(' ', pSpace);
+	playerSpawn.y = atof(line.substr(pSpace, space).c_str());
+	pSpace = space + 1;
+	space = line.find(' ', pSpace);
+	playerSpawn.z = atof(line.substr(pSpace, space).c_str());
+	while(std::getline(save, line))
+		found.push_back(line);
+	save.close();
+    }
+    return found;
+}
 
 std::vector<SystemLog> getLogs() {
     if(!logs.empty())
 	return logs;
+    std::vector<std::string> found = getFound();
     int i = 1;
     while(true) {
 	std::ifstream f(logPath + std::to_string(i++) + ".log");
-	if(f.good())
-	    logs.push_back(getLog(f));
+	if(f.good()) {
+	    auto log = getLog(f);
+	    if(!found.empty()) {
+		log.found = true;
+		for(auto& f: found)
+		    if(log.title == f)
+			log.found = false;
+	    }
+	    logs.push_back(log);
+	}
 	else
 	    break;
     }
     return logs;
+}
+
+glm::vec3 getPlayerSpawn() {
+    return playerSpawn;
 }

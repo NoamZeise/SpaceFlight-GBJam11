@@ -57,7 +57,7 @@ void Module::updateMat() {
 
 const int THROTTLE_RANGE = 20;
 const int THROTTLE_X = 0;
-const int THROTTLE_Y = 72;
+const int THROTTLE_Y = 22;
 const int DIAL_X = THROTTLE_X + 0;
 const int DIAL_Y = THROTTLE_Y + 28;
 
@@ -226,8 +226,80 @@ void ShipMessage::showMessage(std::string text) {
     if(showMessageTimer < SHOW_MESSAGE_DELAY &&
        showMessageTimer > TRANS_TIME) {
 	showMessageTimer = TRANS_TIME;
-    } else if(text != message) {
+    } else {
 	showMessageTimer = 0;
     }
     message = text;
+}
+
+const int DIST_BASE_Y = 22;
+const int DIST_DIAL_Y = DIST_BASE_Y + 46;
+const int BG_X = GB_WIDTH - 11;
+const int DIST_DIAL_X = GB_WIDTH - 6;
+
+DistanceDial::DistanceDial(Render *render) {
+    bg = Module(render->LoadTexture("textures/ship/target-dist.png"),
+		glm::vec4(BG_X, DIST_BASE_Y, 0, 0), GLASS_DEPTH + 0.15f);
+    dial = Module(render->LoadTexture("textures/ship/target-dist-dial.png"),
+		  glm::vec4(DIST_DIAL_X, DIST_DIAL_Y, 0, 0), GLASS_DEPTH + 0.16f);
+		
+    
+}
+
+void DistanceDial::UpdateDial(gamehelper::Timer &timer, TargetMod &mod, Module &dial) {
+    float dist = glm::distance(pos, mod.getTarget());
+    LOG("d: " << dist);
+    glm::vec2 off = offset;
+    float change = (dist - 5)/50.0f;
+    if(change > 36)
+	change = 36;
+    off.y -= change;
+    dial.setBaseOffset(off);
+    dial.Update(timer);
+}
+
+void DistanceDial::Update(glm::vec3 pos, gamehelper::Timer &timer, std::vector<TargetMod> &targets,
+			  std::vector<TargetMod> &logs) {
+    if(!showing && (targets.size() > 0 || logs.size() > 0)) {
+	showing = true;
+    }
+    if(targets.empty() && logs.empty()) {
+	showing = false;
+    }
+
+    if(showing && showingTimer < DIST_SHOWING_DELAY) {
+	showingTimer += timer.FrameElapsed();
+	if(showingTimer > DIST_SHOWING_DELAY) {
+	    showingTimer = DIST_SHOWING_DELAY;
+	}
+    } else if(!showing && showingTimer > 0) {
+	showingTimer -= timer.FrameElapsed();
+	if(showingTimer < 0)
+	    showingTimer = 0;
+    }
+    
+    if(showing || showingTimer > 0) {
+	float ratio = 1 - (showingTimer / DIST_SHOWING_DELAY);
+	offset = ratio * glm::vec2(12, 50);
+	this->pos = pos;
+	bg.setBaseOffset(offset);
+	bg.Update(timer);
+	dials.resize(targets.size() + logs.size(), dial);
+	for(int i = 0; i < targets.size(); i++) {
+	    UpdateDial(timer, targets[i], dials[i]);
+	}
+	for(int i = 0; i < logs.size(); i++) {
+	    UpdateDial(timer, logs[i], dials[i + targets.size()]);
+	}
+
+    }
+}
+
+
+void DistanceDial::Draw(Render *render) {
+    if(showingTimer > 0) {
+	bg.Draw(render);
+	for(auto &d: dials) 
+	    d.Draw(render);
+    }
 }

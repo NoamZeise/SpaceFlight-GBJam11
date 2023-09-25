@@ -3,6 +3,7 @@
 #include "gb_consts.h"
 #include <graphics/glm_helper.h>
 #include <logger.h>
+#include <fstream>
 
 void logVec3(glm::vec3 vec) {
     LOG("x: " << vec.x << " , y: " << vec.y <<
@@ -17,8 +18,8 @@ const float ROT_SPEED = 0.0000001f;
 const float ROT_MAX = 0.001f;
 
 
-Ship::Ship(Render *render, glm::vec3 position)
-    : camera::FirstPerson(position) {
+Ship::Ship(Render *render)
+    : camera::FirstPerson(glm::vec3(600, 0, 0)) {
     shipGlass = Module(render->LoadTexture("textures/ship/glass.png"),
 		       glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT),
 		       GLASS_DEPTH);
@@ -40,19 +41,40 @@ Ship::Ship(Render *render, glm::vec3 position)
     criticalDmg.setShakeLevel(1);
     
     throttle = Throttle(render);
-
     shipMenu = MenuMod(render);
-
+    distDial = DistanceDial(render);
     messager = ShipMessage(render);
 
     unfoundLogs = getLogs();
-
+    for(int i = 0; i < unfoundLogs.size(); i++) {
+	if(unfoundLogs[i].found) {
+	    shipMenu.addLog(unfoundLogs[i], true);
+	    unfoundLogs.erase(unfoundLogs.begin() + i--);
+	}
+    }
+    _position = getPlayerSpawn();
+    logVec3(_position);
     _speed = ROT_SPEED;
     _front = glm::vec3(-1, 0, 0);
     _up = glm::vec3(0, 0, 1);
     _left = glm::vec3(0, -1, 0);
+
+    shipCreated = true;
     
     setSpawn();
+}
+
+void Ship::SaveGame() {
+    if(shipCreated) {
+	std::ofstream f("ship.save", std::ofstream::trunc);
+	if(f.good()) {
+	    f << _position.x << " " << _position.y << " " << _position.z << " \n";
+	    for(auto &l: unfoundLogs) {
+		f << l.title << "\n";
+	    }
+	    f.close();
+	}
+    }
 }
 
 void Ship::setSpawn() {
@@ -73,9 +95,8 @@ void rotQ(float angle, glm::vec3 axis, glm::vec3 *target, glm::vec3 *correct) {
 }
 
 float limRot(float *rot) {
-    if(fabs(*rot) > ROT_MAX) {
+    if(fabs(*rot) > ROT_MAX)
 	*rot = glm::sign(*rot) * ROT_MAX;
-    }
     return *rot;
 }
 
@@ -165,6 +186,7 @@ void Ship::Update(GbInput &input, gamehelper::Timer &timer) {
     messager.Update(timer);
     shipGlass.setShakeLevel(throttlePos);
     shipGlass.Update(timer);
+    distDial.Update(_position, timer, targets, logTargets);
     aim.setShakeLevel(throttlePos);
     aim.Update(timer);
     if(targets.size() > 0 || logTargets.size() > 0) {
@@ -206,6 +228,7 @@ void Ship::Draw(Render *render) {
 	criticalDmg.Draw(render);
     shipGlass.Draw(render);
     throttle.Draw(render);
+    distDial.Draw(render);
     if(emergencyBrake)
 	ebrakeMod.Draw(render);
     aim.Draw(render);
@@ -249,7 +272,7 @@ void Ship::LogCollision(Collision c) {
     case CollisionState::Collide:
 	for(int i = 0; i < unfoundLogs.size(); i++)
 	    if(c.pos == unfoundLogs[i].pos) {
-		shipMenu.addLog(unfoundLogs[i]);
+		shipMenu.addLog(unfoundLogs[i], false);
 		for(int j = 0; j < logTargets.size(); j++) {
 		    if(logTargets[j].getTarget() == c.pos) {
 			logTargets.erase(logTargets.begin() + j--);
@@ -259,6 +282,7 @@ void Ship::LogCollision(Collision c) {
 		unfoundLogs.erase(unfoundLogs.begin() + i--);
 		setSpawn();
 		messager.showMessage("Log Found");
+		SaveGame();
 	    }
 	break;
     case CollisionState::Close:

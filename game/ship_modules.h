@@ -121,7 +121,25 @@ private:
     Resource::Texture bg;
     glm::vec2 off;
     glm::mat4 model;
-    
+};
+
+const int DIST_SHOWING_DELAY = 400;
+class DistanceDial {
+public:
+    DistanceDial(){}
+    DistanceDial(Render *render);
+    void UpdateDial(gamehelper::Timer &timer, TargetMod &mod, Module &dial);
+    void Update(glm::vec3 pos, gamehelper::Timer &timer, std::vector<TargetMod> &targets,
+		std::vector<TargetMod> &logs);
+    void Draw(Render *render);
+private:
+    Module bg;
+    std::vector<Module> dials;
+    Module dial;
+    glm::vec3 pos;
+    glm::vec2 offset;
+    bool showing = false;
+    float showingTimer = 0;
 };
 
 

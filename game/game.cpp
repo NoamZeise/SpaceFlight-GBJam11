@@ -14,8 +14,6 @@
 
 const float SPECULAR_INTENSITY = 10.0f;
 
-const float CAM_START_X = 560.0f;
-
 Game::Game(RenderFramework defaultFramework) {
     ManagerState state;
     state.conf.target_resolution[0] = GB_WIDTH;
@@ -25,8 +23,8 @@ Game::Game(RenderFramework defaultFramework) {
     state.conf.texture_filter_nearest = true;
     state.conf.depth_range_3D[0] = NEAR_CLIP_3D;
     state.conf.depth_range_3D[1] = FAR_CLIP_3D;
-    state.conf.depth_range_2D[0] = -50.0f;
-    state.conf.depth_range_2D[1] = 50.0f;
+    state.conf.depth_range_2D[0] = -100.0f;
+    state.conf.depth_range_2D[1] = 100.0f;
     state.cursor = cursorState::hidden;
     
     manager = new Manager(defaultFramework, state);
@@ -35,7 +33,7 @@ Game::Game(RenderFramework defaultFramework) {
     screenMat = glmhelper::calcMatFromRect(glm::vec4(0, 0, GB_WIDTH, GB_HEIGHT), 0,
 					   // should be furthest in the background
 					   state.conf.depth_range_2D[0] + 0.01f);
-    fpcam = camera::FirstPerson(glm::vec3(CAM_START_X, 0.0f, 0.0f));
+    fpcam = camera::FirstPerson(glm::vec3(600, 0.0f, 0.0f));
     fpcam.setSpeed(0.001f);
     finishedDrawSubmit = true;
     manager->render->setPalette(menu.getPalette().toShaderPalette());
@@ -45,16 +43,17 @@ Game::Game(RenderFramework defaultFramework) {
 }
 
 Game::~Game() {
-  if (submitDraw.joinable())
-    submitDraw.join();
-  delete manager;
+    ship.SaveGame();
+    if (submitDraw.joinable())
+	submitDraw.join();
+    delete manager;
 }
 
 void Game::loadAssets() {
     pixel = manager->render->LoadTexture("textures/pixel.png");
     menu = MainMenu(manager->render);
     system = System(manager->render);
-    ship = Ship(manager->render, glm::vec3(CAM_START_X, 0.0f, 0.0f));
+    ship = Ship(manager->render);
     stars = manager->render->Load3DModel("models/stars.obj");
     stars.useShading = false;
 	

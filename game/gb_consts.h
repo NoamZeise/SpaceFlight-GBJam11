@@ -9,7 +9,7 @@
 const float GLASS_DEPTH = 0.0f;
 const float THROTTLE_LIM = 1.0;
 const float NEAR_CLIP_3D = 0.5f;
-const float FAR_CLIP_3D = 100000000000000000000.0f;
+const float FAR_CLIP_3D = 10000000000000000000000000000000.0f;
 
 // matches flat.frag shader
 const int BASE_COLOUR0 = 0x1c1c1c;

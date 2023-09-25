@@ -58,7 +58,8 @@ System::System(Render *render) {
     Resource::Model logModel = render->Load3DModel("models/log.obj");
     std::vector<SystemLog> logs = getLogs();
     for(auto& l: logs) {
-	this->logs.push_back(LogModel(logModel, l.pos));
+	if(!l.found)
+	    this->logs.push_back(LogModel(logModel, l.pos));
     }
 }
 
@@ -107,7 +108,7 @@ Collision System::planetCollisions(glm::vec3 pos) {
 Collision System::logCollisions(glm::vec3 pos) {
     Collision col = {CollisionState::None, glm::vec3(0) };
     for(int i = 0; i < logs.size(); i++) {
-	checkCol(logs[i], pos, &col, 50);
+	checkCol(logs[i], pos, &col, 350);
 	if(col.state == CollisionState::Collide) {
 	    logs.erase(logs.begin() + i--);
 	    return col;

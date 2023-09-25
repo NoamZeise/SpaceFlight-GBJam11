@@ -15,7 +15,8 @@ const float RESPAWN_DELAY = 3000;
 class Ship : public camera::FirstPerson {
  public:
     Ship(){}
-    Ship(Render *render, glm::vec3 position);
+    Ship(Render *render);
+    void SaveGame();
     void Update(GbInput &input, gamehelper::Timer &timer);
     void Draw(Render *render);
 
@@ -41,6 +42,7 @@ class Ship : public camera::FirstPerson {
     Module ebrakeMod;
     Module criticalDmg;
     Throttle throttle;
+    DistanceDial distDial;
     ShipMessage messager;
 
     MenuMod shipMenu;
@@ -66,6 +68,8 @@ class Ship : public camera::FirstPerson {
     bool emergencyBrake = false;
     bool respawning = false;
     float respawnTimer = RESPAWN_DELAY;
+
+    bool shipCreated = false;
 };
 
 #endif

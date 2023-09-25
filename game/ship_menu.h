@@ -15,7 +15,7 @@ public:
     void toggleMenu();
     bool menuInTransition();
     bool isExit() { return toExit; }
-    void addLog(SystemLog log);
+    void addLog(SystemLog log, bool read);
     TargetMod getTargetMod() { return targetMod; }
 private:
 

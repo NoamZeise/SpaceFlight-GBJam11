@@ -165,8 +165,11 @@ void MenuMod::Draw(Render *render) {
     menuBg.Draw(render);
     int cursor = menuLists[(int)state].cursorPos;
     int listSize = MENU_LINE_AMOUNT;
-    if(state == MenuState::ReadingLog)
+    if(state == MenuState::ReadingLog) {
 	listSize = READING_LINE_AMOUNT;
+	//if(readingTimer < menuTimeLim/2)
+	//   listSize = 1;
+    }
     int menuStart = (cursor / listSize) * listSize;
     for(int i = menuStart; i < menuLists[(int)state].items.size()
 	    && i < menuStart + listSize; i++) {
@@ -194,7 +197,7 @@ void MenuMod::toggleMenu() {
 	menuTimer = 0;
 }
 
-void MenuMod::addLog(SystemLog log) {
+void MenuMod::addLog(SystemLog log, bool read) {
     logs.push_back(log);
     std::string newLog = logs.back().title;
     menuLists[(int)MenuState::Logs].items.push_back("");
@@ -210,7 +213,7 @@ void MenuMod::addLog(SystemLog log) {
     });
     for(int i = 0; i < logs.size(); i++) {
 	menuLists[(int)MenuState::Logs].items[i] =
-	    (logs[i].title == newLog ? "[N]" : "") +
+	    (logs[i].title == newLog && !read ? "[N]" : "") +
 	    logs[i].title;
     }
 }
