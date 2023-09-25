@@ -25,7 +25,7 @@ private:
 };
 
 Random randGen;
-
+namespace gamehelper {
 namespace random {
   double real() {
       return randGen.Real();
@@ -35,5 +35,4 @@ namespace random {
       return randGen.PositiveReal();
   }
 }
-
-
+}

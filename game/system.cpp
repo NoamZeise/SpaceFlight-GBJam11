@@ -37,8 +37,8 @@ void Planet::Update(gamehelper::Timer &timer) {
 const float LOG_SCALE = 0.1;
 
 LogModel::LogModel(Resource::Model model, glm::vec3 pos)
-    : Planet("", model, pos, LOG_SCALE, random::real()) {
-    axisOfRot = glm::vec3(random::real(), random::real(), random::real());
+    : Planet("", model, pos, LOG_SCALE, gamehelper::random::real()) {
+    axisOfRot = glm::vec3(gamehelper::random::real(), gamehelper::random::real(), gamehelper::random::real());
 }
 
 System::System(Render *render) {
