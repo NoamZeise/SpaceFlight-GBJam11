@@ -21,3 +21,36 @@ A 3D space flight sim about exploring a solar system and collection log files. B
 |DIR   |  ARROWS  |   DPAD/JOY |
 --------------------------------
 ```
+
+## Compile Instructions
+
+### Requirements:
+
+* C++ compiler - ie visual studio(MSVC), gcc, clang
+* [CMake](https://cmake.org/)
+* [Vulkan SDK](https://vulkan.lunarg.com/)
+
+
+### Compiling
+
+* Clone this repo with the option of `--recurse-submodules`, ie
+```
+git clone https://github.com/NoamZeise/gbjam11.git --recurse-submodules
+```
+* make a build folder and enter it
+```
+cd gbjam11 
+mkdir build
+cd build
+```
+* run cmake with these options
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DNO_AUDIO=true
+```
+
+* build the executable
+```
+cmake --build .
+```
+
+* The executable should now be in `gbjam11/build/game/` and is called `GBJam11`.
