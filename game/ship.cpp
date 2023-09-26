@@ -87,13 +87,6 @@ glm::vec3 mulv3(long double scalar, glm::vec3 vec) {
     return glm::vec3(vec.x * scalar, vec.y * scalar, vec.z * scalar);
 }
 
-void rotQ(float angle, glm::vec3 axis, glm::vec3 *target, glm::vec3 *correct) {
-    if(angle == 0) return;
-    glm::quat rot = glm::normalize(glm::quat(angle, axis));
-    *target = glm::normalize(rot * *target * glm::conjugate(rot));
-    *correct = glm::cross(*target, axis);
-}
-
 float limRot(float *rot) {
     if(fabs(*rot) > ROT_MAX)
 	*rot = glm::sign(*rot) * ROT_MAX;
@@ -154,9 +147,17 @@ void Ship::physUpdate(gamehelper::Timer &timer) {
     }
 	    
     _position += mulv3(timer.FrameElapsed(), velocityVec);
-    rotQ(limRot(&pitchVel) * timer.FrameElapsed(), _left, &_front, &_up);
-    rotQ(limRot(&yawVel) * timer.FrameElapsed(), _up, &_left, &_front);
-    rotQ(limRot(&rollVel) * timer.FrameElapsed(), _front, &_up, &_left);
+
+    glm::quat rot = glm::normalize(
+	    glm::quat(limRot(&pitchVel) * timer.FrameElapsed(), _left) *
+	    glm::quat(limRot(&yawVel) * timer.FrameElapsed(), _up) *
+	    glm::quat(limRot(&rollVel) * timer.FrameElapsed(), _front));
+
+    glm::quat conj = glm::conjugate(rot);
+
+    _left = rot * _left * conj;
+    _up = rot * _up * conj;
+    _front = rot * _front * conj;
 
     float additionalFov = (throttlePos > 0
 			   ? (throttlePos * THROTTLE_FOV) : 0)
